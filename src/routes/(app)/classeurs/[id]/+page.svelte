@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Badge, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
+	import { Alert, Badge, Button, EmptyState, Input, Modal, toast } from '@guillaumeg/ui';
 	import { Pencil, Search, Trash2 } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
@@ -10,7 +10,11 @@
 
 	const binder = $derived(data.binder);
 	let editing = $state(false);
-	let confirmDelete = $state(false);
+
+	const DELETE_MODAL_ID = 'binder-delete';
+	const deleteModal = () => document.getElementById(DELETE_MODAL_ID) as HTMLDialogElement | null;
+	let deleting = $state(false);
+	const cardCount = $derived(binder.items.reduce((sum, item) => sum + item.quantity, 0));
 </script>
 
 <svelte:head>
@@ -49,7 +53,7 @@
 		<div class="flex gap-2">
 			<Button href="/recherche" icon={Search}>Ajouter une carte</Button>
 			<Button variant="ghost" icon={Pencil} aria-label="Renommer" onclick={() => (editing = true)} />
-			<Button variant="ghost" icon={Trash2} aria-label="Supprimer" onclick={() => (confirmDelete = true)} />
+			<Button variant="ghost" icon={Trash2} aria-label="Supprimer" onclick={() => deleteModal()?.showModal()} />
 		</div>
 	{/if}
 </div>
@@ -58,17 +62,34 @@
 	<div class="mb-4"><Alert variant="error" dismissible={false}>{form.message}</Alert></div>
 {/if}
 
-{#if confirmDelete}
-	<div class="mb-4">
-		<Alert variant="warning" title="Supprimer ce classeur ?" dismissible={false}>
-			<p class="mb-2">Ses {binder.items.length} lot(s) seront supprimés aussi. C'est définitif.</p>
-			<form method="POST" action="?/delete" class="flex gap-2" use:enhance>
-				<Button type="submit" variant="danger" icon={Trash2}>Supprimer</Button>
-				<Button variant="ghost" onclick={() => (confirmDelete = false)}>Annuler</Button>
-			</form>
-		</Alert>
-	</div>
-{/if}
+<Modal id={DELETE_MODAL_ID} title="Supprimer ce classeur ?" size="sm">
+	<p class="mb-4">
+		Le classeur <strong>« {binder.name} »</strong>
+		{#if cardCount > 0}
+			et ses <strong>{cardCount} carte{cardCount > 1 ? 's' : ''}</strong> seront supprimés.
+		{:else}
+			sera supprimé.
+		{/if}
+		Cette action est <strong>irréversible</strong>.
+	</p>
+	<form
+		method="POST"
+		action="?/delete"
+		class="flex justify-end gap-2"
+		use:enhance={() => {
+			deleting = true;
+			return async ({ result, update }) => {
+				deleting = false;
+				if (result.type === 'redirect') toast.success('Classeur supprimé.');
+				deleteModal()?.close();
+				await update();
+			};
+		}}
+	>
+		<Button variant="ghost" onclick={() => deleteModal()?.close()}>Annuler</Button>
+		<Button type="submit" variant="danger" icon={Trash2} loading={deleting}>Supprimer définitivement</Button>
+	</form>
+</Modal>
 
 {#if binder.items.length === 0}
 	<EmptyState

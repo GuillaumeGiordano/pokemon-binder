@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Badge, Button, Input, NumberInput, toast } from '@guillaumeg/ui';
+	import { Alert, Badge, Button, Input, Modal, NumberInput, toast } from '@guillaumeg/ui';
 	import { ArrowLeft, Save, Trash2 } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
@@ -17,7 +17,10 @@
 
 	// Editable, and reset to the saved value whenever the lot is reloaded.
 	let quantity = $derived(lot.quantity);
-	let confirmDelete = $state(false);
+
+	const DELETE_MODAL_ID = 'lot-delete';
+	const deleteModal = () => document.getElementById(DELETE_MODAL_ID) as HTMLDialogElement | null;
+	let deleting = $state(false);
 
 	const tone = (amount: number) => (amount > 0 ? 'text-green-600' : amount < 0 ? 'text-red-600' : '');
 </script>
@@ -118,21 +121,36 @@
 			/>
 			<div class="flex gap-2 sm:col-span-2">
 				<Button type="submit" icon={Save}>Enregistrer</Button>
-				<Button variant="ghost" icon={Trash2} onclick={() => (confirmDelete = true)}>Supprimer</Button>
+				<Button variant="ghost" icon={Trash2} onclick={() => deleteModal()?.showModal()}>Supprimer</Button>
 			</div>
 		</form>
 
 		{#if form?.message}
 			<Alert variant="error" dismissible={false}>{form.message}</Alert>
 		{/if}
-
-		{#if confirmDelete}
-			<Alert variant="warning" title="Supprimer ce lot ?" dismissible={false}>
-				<form method="POST" action="?/delete" class="mt-2 flex gap-2" use:enhance>
-					<Button type="submit" variant="danger" icon={Trash2}>Supprimer</Button>
-					<Button variant="ghost" onclick={() => (confirmDelete = false)}>Annuler</Button>
-				</form>
-			</Alert>
-		{/if}
 	</div>
 </div>
+
+<Modal id={DELETE_MODAL_ID} title="Supprimer ce lot ?" size="sm">
+	<p class="mb-4">
+		<strong>{lot.quantity} × {lot.card.name}</strong> ({lot.card.localId}/{lot.card.officialCount}) sera retiré du classeur
+		« {lot.binder.name} ». Cette action est <strong>irréversible</strong>.
+	</p>
+	<form
+		method="POST"
+		action="?/delete"
+		class="flex justify-end gap-2"
+		use:enhance={() => {
+			deleting = true;
+			return async ({ result, update }) => {
+				deleting = false;
+				if (result.type === 'redirect') toast.success('Lot supprimé.');
+				deleteModal()?.close();
+				await update();
+			};
+		}}
+	>
+		<Button variant="ghost" onclick={() => deleteModal()?.close()}>Annuler</Button>
+		<Button type="submit" variant="danger" icon={Trash2} loading={deleting}>Supprimer définitivement</Button>
+	</form>
+</Modal>
