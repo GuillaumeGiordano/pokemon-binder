@@ -1,11 +1,28 @@
 <script lang="ts">
-	import { Alert, Badge } from '@guillaumeg/ui';
-	import { CARD_VARIANT_LABELS } from '$lib/records/card';
+	import { enhance } from '$app/forms';
+	import { Alert, Badge, Button, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
+	import { Plus } from '@lucide/svelte';
+	import { CARD_VARIANTS, CARD_VARIANT_LABELS } from '$lib/records/card';
+	import {
+		CARD_CONDITIONS,
+		CARD_CONDITION_LABELS,
+		CARD_LANGUAGES,
+		CARD_LANGUAGE_LABELS
+	} from '$lib/records/collection';
 	import { formatDay, formatEur } from '$lib/utils/format';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	const card = $derived(data.card);
+	// Unknown variants (TCGdex gave none): every variant can be picked.
+	const variantOptions = $derived(
+		(card.variants.length > 0 ? card.variants : CARD_VARIANTS).map((v) => ({ value: v, label: CARD_VARIANT_LABELS[v] }))
+	);
+	const conditionOptions = CARD_CONDITIONS.map((c) => ({ value: c, label: `${c} — ${CARD_CONDITION_LABELS[c]}` }));
+	const languageOptions = CARD_LANGUAGES.map((l) => ({ value: l, label: CARD_LANGUAGE_LABELS[l] }));
+	const binderOptions = $derived(data.binders.map((b) => ({ value: b.id, label: b.name })));
+
+	let quantity = $state(1);
 </script>
 
 <svelte:head>
@@ -53,6 +70,44 @@
 				<p class="text-sm opacity-70">Au {formatDay(card.price.date)}, toutes langues et tous états confondus.</p>
 			{:else}
 				<p class="opacity-70">Pas de cote disponible pour cette carte.</p>
+			{/if}
+		</section>
+
+		<section class="flex flex-col gap-3 rounded-lg border p-4">
+			<h2 class="font-semibold">Ajouter à un classeur</h2>
+			{#if data.binders.length === 0}
+				<p class="opacity-70">Tu n'as pas encore de classeur.</p>
+				<Button href="/" variant="secondary">Créer un classeur</Button>
+			{:else}
+				<form
+					method="POST"
+					action="?/add"
+					class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+					use:enhance={() =>
+						async ({ result, update }) => {
+							if (result.type === 'success')
+								toast.success(result.data?.merged ? 'Ajouté au lot existant.' : 'Ajouté au classeur.');
+							await update({ reset: false });
+						}}
+				>
+					<Select name="binderId" label="Classeur" options={binderOptions} value={data.binders[0].id} required />
+					<Select name="variant" label="Variante" options={variantOptions} value={variantOptions[0].value} required />
+					<Select name="condition" label="État" options={conditionOptions} value="NM" required />
+					<Select name="language" label="Langue" options={languageOptions} value="FR" required />
+					<div>
+						<NumberInput label="Quantité" bind:value={quantity} min={1} max={999} />
+						<input type="hidden" name="quantity" value={quantity} />
+					</div>
+					<Input name="purchaseUnitPrice" label="Prix payé par carte (€)" placeholder="Ex. 4,50" hint="Facultatif" />
+					<div class="sm:col-span-2">
+						<Button type="submit" icon={Plus}>Ajouter</Button>
+					</div>
+				</form>
+				{#if form?.message}
+					<Alert variant="error" dismissible={false}>{form.message}</Alert>
+				{:else if form?.itemId}
+					<a href="/lots/{form.itemId}" class="text-sm underline">Voir le lot</a>
+				{/if}
 			{/if}
 		</section>
 	</div>
