@@ -53,6 +53,10 @@ Application web permettant de :
 | D23 | 2026-10-30 | Statistique V1 : **valeur totale** de la collection (et par classeur) | Le besoin principal ; le reste viendra ensuite |
 | D24 | 2026-10-30 | Conception **mobile first** | Usage principal sur téléphone (salon, brocante) |
 | D25 | 2026-10-30 | V1 en **local** uniquement ; déploiement VPS plus tard | Valider l'usage avant d'héberger |
+| D26 | 2026-10-30 | Image manquante en français → **repli sur l'image anglaise** (même id de carte) ; sans image nulle part → emplacement avec nom, numéro, extension | 3 856 / 22 201 cartes FR sans image ; 2 186 en ont une en anglais |
+| D27 | 2026-10-30 | Prix moyens stockés avec **4 décimales** (`Decimal(12, 4)`), arrondis à l'affichage | Une moyenne arrondie au centime dérivait une fois remultipliée (−1,83 € au lieu de −1,82 €) |
+| D28 | 2026-10-30 | Suppression d'un lot / d'un classeur confirmée dans une **popin** (`Modal`) | La confirmation en ligne s'affichait hors écran |
+| D29 | 2026-10-30 | **Vue d'une extension** : toutes ses cartes, possédées (×quantité) ou **manquantes (grisées)**, filtre Toutes / Possédées / Manquantes ; cartes secrètes à part | Voir d'un coup d'œil ce qui manque pour compléter une extension |
 
 ---
 
@@ -88,6 +92,7 @@ _Aucune pour l'instant — toutes les questions de la V1 sont tranchées._
 | `/recherche` | Recherche par nom / numéro → « Ajouter au classeur » (classeur, variante, état, langue, quantité, prix payé) |
 | `/lots/[id]` | Détail d'un lot : prix payé / cote figée / cote actuelle ; modifier, supprimer |
 | `/extensions` | **Complétion** par extension (« 120/198 (+12 secrètes) ») |
+| `/extensions/[id]` | Toutes les cartes d'une extension, possédées / manquantes, avec filtre (D29) |
 
 ## 5 ter. Ordre de construction (validé le 2026-10-30)
 

@@ -17,6 +17,16 @@ export const findOwned = (id: string, ownerSub: string) =>
 
 export type CollectionItemWithCard = NonNullable<Awaited<ReturnType<typeof findOwned>>>;
 
+/** Owned quantity per card of a set, over all the user's binders (D18). */
+export async function ownedQuantitiesInSet(ownerSub: string, setId: string): Promise<Map<string, number>> {
+	const rows = await prisma.collectionItem.groupBy({
+		by: ['cardId'],
+		where: { binder: { ownerSub }, card: { setId } },
+		_sum: { quantity: true }
+	});
+	return new Map(rows.map((row) => [row.cardId, row._sum.quantity ?? 0]));
+}
+
 /** The lot with exactly this key (D20: at most one, enforced by a unique constraint). */
 export const findByKey = (key: LotKey) =>
 	prisma.collectionItem.findUnique({ where: { binderId_cardId_variant_condition_language: key } });

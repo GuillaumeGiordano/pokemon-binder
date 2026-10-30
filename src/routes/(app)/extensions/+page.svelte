@@ -21,7 +21,8 @@
 {:else}
 	<ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
 		{#each data.completions as set (set.id)}
-			<li class="flex flex-col gap-2 rounded-lg border p-4">
+			<li>
+				<a href="/extensions/{set.id}" class="flex flex-col gap-2 rounded-lg border p-4 hover:opacity-80">
 				<div class="flex items-center justify-between gap-2">
 					<span class="truncate font-semibold">{set.name}</span>
 					<span class="text-sm font-bold">{set.percent} %</span>
@@ -37,6 +38,7 @@
 						(+{set.ownedSecret} secrète{set.ownedSecret > 1 ? 's' : ''}{set.secretCount > 0 ? ` sur ${set.secretCount}` : ''})
 					{/if}
 				</p>
+				</a>
 			</li>
 		{/each}
 	</ul>

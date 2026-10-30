@@ -77,6 +77,11 @@ export async function searchCardsByNumberContaining(digits: string): Promise<Tcg
 
 export const getCard = (id: string) => get<TcgdexCard>(`/cards/${encodeURIComponent(id)}`);
 
+export type TcgdexSet = TcgdexSetBrief & { cards: TcgdexCardBrief[] };
+
+/** A set with all its cards. Null: unknown set. */
+export const getSet = (id: string) => get<TcgdexSet>(`/sets/${encodeURIComponent(id)}`);
+
 /** Every set, oldest first (TCGdex's default order is the release date). */
 export async function listSets(): Promise<TcgdexSetBrief[]> {
 	return (await get<TcgdexSetBrief[]>('/sets')) ?? [];

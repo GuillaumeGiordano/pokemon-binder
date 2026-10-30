@@ -28,7 +28,7 @@ async function setsById(): Promise<Map<string, KnownSet>> {
 let englishImagesCache: { at: number; byId: Map<string, string> } | null = null;
 
 /** English card images by card id (kept in memory like the sets list). Empty if unavailable. */
-async function englishImages(): Promise<Map<string, string>> {
+export async function englishImages(): Promise<Map<string, string>> {
 	if (englishImagesCache && Date.now() - englishImagesCache.at < SETS_CACHE_TTL_MS) return englishImagesCache.byId;
 	try {
 		const cards = await tcgdex.listEnglishCards();
