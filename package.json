@@ -36,6 +36,7 @@
 		"@lucide/svelte": "^1.64.0",
 		"@prisma/adapter-pg": "^7.10.1",
 		"@prisma/client": "^7.10.1",
+		"openid-client": "^6.8.8",
 		"pg": "^8.23.1"
 	}
 }
