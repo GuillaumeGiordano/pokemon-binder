@@ -61,6 +61,7 @@ Application web permettant de :
 | D31 | 2026-10-30 | **Accueil du compte** : valeur totale de la famille + valeur de chaque profil ; un clic entre dans un profil (pas d'écran « Qui collectionne ? ») | Vue d'ensemble conservée, un clic pour entrer |
 | D32 | 2026-10-30 | Dans la vue d'une extension, une carte possédée en **plusieurs lots** (ex. Normale + Reverse) s'affiche une fois ; le clic ouvre une **popin listant ses lots** | Accéder à chaque lot sans dupliquer la carte dans la grille |
 | D33 | 2026-10-30 | **Scan par photo (V2, option A)** : bouton « Scanner » sur la recherche → appareil photo (`<input capture>`) → **OCR Tesseract.js dans le navigateur** du numéro « 025/198 » → recherche par numéro. **5 lectures** de la photo (entière, tiers bas, bande bas-gauche ×1 / ×2, bloc) et **vote majoritaire**. Le numéro reste modifiable ; si aucune extension n'a le total lu, toutes les cartes de ce numéro sont proposées | Gratuit, sans serveur. Mesuré : aucune lecture seule n'est fiable (025/198 lu 025/195), le vote corrige. Limites : photo de la carte entière et droite ; numéros de Galerie (`TG01/TG30`) non gérés ; un total mal lu peut tomber sur une vraie extension (Tempête Argentée, 195) |
+| D34 | 2026-10-30 | **Déploiement sur le VPS** (révise D25) : `https://pokemon.g2webdev.fr`, PM2 `pokemon-binder` port 3030 derrière Nginx, PostgreSQL du VPS, connexion via le G2 Hub de production ; procédure dans `DEPLOY.md`, mise à jour par `git pull && ./scripts/deploy.sh` | Tester en conditions réelles, notamment le scan sur téléphone (HTTPS) |
 
 ---
 
