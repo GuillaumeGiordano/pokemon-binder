@@ -19,7 +19,7 @@ step() { printf '\n\033[1;36m▶ %s\033[0m\n' "$1"; }
 command -v pm2 >/dev/null || { echo "✗ pm2 introuvable dans le PATH."; exit 1; }
 [ -f .env ] || { echo "✗ .env introuvable dans $ROOT (voir .env.example)."; exit 1; }
 PORT=$(grep -E '^PORT=' .env | cut -d= -f2 | tr -d '"')
-PORT=${PORT:-3030}
+PORT=${PORT:-3040}
 
 echo "Déploiement de $(git rev-parse --short HEAD 2>/dev/null || echo '?') dans $ROOT"
 
@@ -44,16 +44,19 @@ fi
 pm2 save
 
 # Liveness: without a session every page redirects to /connexion (303); "000" = not listening yet.
-code=000
+# The redirect TARGET is checked too: another app on the same port also answers 303 (seen on
+# 2026-10-30: g2-erp held port 3030 and redirected to /login, the deploy looked fine).
+result=000
 for _ in 1 2 3 4 5; do
 	sleep 2
-	code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:$PORT/" 2>/dev/null || true)
-	[ "$code" != "000" ] && break
+	result=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 5 "http://127.0.0.1:$PORT/" 2>/dev/null || true)
+	[ "${result%% *}" != "000" ] && break
 done
-if [ "$code" = "303" ]; then
-	echo "· $APP : ✓ HTTP $code (redirection vers la connexion)"
+if [[ "$result" == "303 "*"/connexion" ]]; then
+	echo "· $APP : ✓ HTTP 303 → /connexion"
 else
-	echo "· $APP : ✗ HTTP $code. Voir : pm2 logs $APP --lines 50 --nostream"
+	echo "· $APP : ✗ réponse « $result » sur le port $PORT (attendu : 303 → /connexion)."
+	echo "  Autre app sur ce port ? sudo ss -tlnp | grep ':$PORT\\b' · Logs : pm2 logs $APP --lines 50 --nostream"
 	exit 1
 fi
 

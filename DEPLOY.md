@@ -1,7 +1,7 @@
 # Déploiement — Pokémon Binder
 
 > **Cible** : `https://pokemon.g2webdev.fr` · VPS Infomaniak (`179.237.68.75`, Debian 13)
-> · PM2 (nom `pokemon-binder`, port **3030**) derrière Nginx · PostgreSQL du VPS.
+> · PM2 (nom `pokemon-binder`, port **3040**) derrière Nginx · PostgreSQL du VPS.
 > Procédure générale du VPS : `Projects_G2_Webdev/deploiement-vps.md`.
 
 ---
@@ -30,12 +30,12 @@ ssh -i C:\Users\guigo\.ssh\id_ed25519 -p 2222 debian@179.237.68.75
 
 ```bash
 node -v                                   # 22 ou plus (le .env est chargé par --env-file)
-sudo ss -tlnp | grep -E ':3030\b' || echo "port 3030 libre"
+sudo ss -tlnp | grep -E ':3040\b' || echo "port 3040 libre"   # une ligne affichée = port PRIS (3030 l'était par g2-erp)
 systemctl is-active postgresql            # « active » : PostgreSQL est déjà installé
 free -h                                   # le build demande de la mémoire (swap de 1 Go prévu)
 ```
 
-- **Port 3030 occupé** → choisir un autre port et le reporter dans `.env` (`PORT`) et dans Nginx.
+- **Port 3040 occupé** → choisir un autre port et le reporter dans `.env` (`PORT`) et dans Nginx.
 - **PostgreSQL absent** → `sudo apt install -y postgresql`.
 
 ---
@@ -75,7 +75,7 @@ SESSION_SECRET="<valeur générée ci-dessus>"
 PRICE_JOB_ENABLED="true"
 ORIGIN="https://pokemon.g2webdev.fr"
 HOST="127.0.0.1"
-PORT="3030"
+PORT="3040"
 ```
 
 ```bash
@@ -110,7 +110,7 @@ server {
     server_name pokemon.g2webdev.fr;
 
     location / {
-        proxy_pass http://127.0.0.1:3030;
+        proxy_pass http://127.0.0.1:3040;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
