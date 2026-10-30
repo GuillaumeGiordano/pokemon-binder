@@ -1,16 +1,26 @@
 import type { CollectionItemWithCard } from '$lib/server/repositories/collectionItemRepository';
 import type { listByOwner } from '$lib/server/repositories/binderRepository';
-import { referencePrice } from '$lib/utils/price';
+import { referencePrice, valueOf } from '$lib/utils/price';
 import type { BinderSummaryVM, CollectionItemVM } from '$lib/viewmodels/collection';
 
 const toNumber = (value: { toNumber(): number } | null) => (value === null ? null : value.toNumber());
 
 export function toBinderSummaryVM(binder: Awaited<ReturnType<typeof listByOwner>>[number]): BinderSummaryVM {
+	const lots = binder.items.map((item) => {
+		const latest = item.card.prices[0];
+		return {
+			quantity: item.quantity,
+			unitPrice: latest
+				? referencePrice(item.variant, { trend: toNumber(latest.trend), trendHolo: toNumber(latest.trendHolo) })
+				: null
+		};
+	});
 	return {
 		id: binder.id,
 		name: binder.name,
 		lotCount: binder.items.length,
-		cardCount: binder.items.reduce((sum, item) => sum + item.quantity, 0)
+		cardCount: binder.items.reduce((sum, item) => sum + item.quantity, 0),
+		...valueOf(lots)
 	};
 }
 

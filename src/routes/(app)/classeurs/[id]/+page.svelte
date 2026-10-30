@@ -38,7 +38,13 @@
 			<Button variant="ghost" onclick={() => (editing = false)}>Annuler</Button>
 		</form>
 	{:else}
-		<h1 class="text-2xl font-bold">{binder.name}</h1>
+		<div>
+			<h1 class="text-2xl font-bold">{binder.name}</h1>
+			<p class="opacity-70">
+				Valeur : <strong>{formatEur(binder.value)}</strong>
+				{#if binder.unpricedCount > 0}· {binder.unpricedCount} sans cote{/if}
+			</p>
+		</div>
 		<div class="flex gap-2">
 			<Button href="/recherche" icon={Search}>Ajouter une carte</Button>
 			<Button variant="ghost" icon={Pencil} aria-label="Renommer" onclick={() => (editing = true)} />

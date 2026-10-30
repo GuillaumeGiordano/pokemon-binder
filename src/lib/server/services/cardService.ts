@@ -83,9 +83,10 @@ function variantsOf(card: TcgdexCard): CardVariant[] {
 }
 
 /** Today, as a date without time (UTC), for the daily price snapshot. */
-const today = () => new Date(new Date().toISOString().slice(0, 10));
+export const today = () => new Date(new Date().toISOString().slice(0, 10));
 
-async function syncCard(id: string): Promise<boolean> {
+/** Fetch a card from TCGdex and save it with today's price. False: unknown card. */
+export async function syncCard(id: string): Promise<boolean> {
 	const card = await tcgdex.getCard(id);
 	if (!card) return false;
 	const cardmarket = card.pricing?.cardmarket;

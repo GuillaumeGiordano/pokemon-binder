@@ -12,7 +12,16 @@ export const listByOwner = (ownerSub: string) =>
 	prisma.binder.findMany({
 		where: { ownerSub },
 		orderBy: { createdAt: 'asc' },
-		include: { items: { select: { quantity: true } } }
+		// What the value of each binder needs (D23): quantity, variant and latest price of each lot.
+		include: {
+			items: {
+				select: {
+					quantity: true,
+					variant: true,
+					card: { select: { prices: { orderBy: { date: 'desc' }, take: 1 } } }
+				}
+			}
+		}
 	});
 
 export const findOwned = (id: string, ownerSub: string) =>

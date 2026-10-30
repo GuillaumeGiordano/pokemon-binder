@@ -5,8 +5,13 @@ import { getCardDetail } from '$lib/server/services/cardService';
 import { Prisma } from '$lib/server/prisma/client';
 import { CARD_VARIANTS, type CardVariant } from '$lib/records/card';
 import { CARD_CONDITIONS, CARD_LANGUAGES, type CardCondition, type CardLanguage } from '$lib/records/collection';
-import { parseEuroInput, referencePrice } from '$lib/utils/price';
-import type { BinderDetailVM, BinderSummaryVM, CollectionItemVM } from '$lib/viewmodels/collection';
+import { parseEuroInput, referencePrice, roundCents, valueOf } from '$lib/utils/price';
+import type {
+	BinderDetailVM,
+	BinderSummaryVM,
+	CollectionItemVM,
+	CollectionOverviewVM
+} from '$lib/viewmodels/collection';
 
 // Binders (D15) and lots (D11): adding an identical copy merges into the existing lot with
 // weighted average prices (D20); the market price is frozen at acquisition (D17).
@@ -65,9 +70,26 @@ export async function listBinders(ownerSub: string): Promise<BinderSummaryVM[]> 
 	return (await binderRepository.listByOwner(ownerSub)).map(toBinderSummaryVM);
 }
 
+/** My binders and the value of the whole collection (D23). */
+export async function getCollectionOverview(ownerSub: string): Promise<CollectionOverviewVM> {
+	const binders = await listBinders(ownerSub);
+	return {
+		totalValue: roundCents(binders.reduce((sum, binder) => sum + binder.value, 0)),
+		unpricedCount: binders.reduce((sum, binder) => sum + binder.unpricedCount, 0),
+		binders
+	};
+}
+
 export async function getBinder(id: string, ownerSub: string): Promise<BinderDetailVM | null> {
 	const binder = await binderRepository.findOwned(id, ownerSub);
-	return binder && { id: binder.id, name: binder.name, items: binder.items.map(toCollectionItemVM) };
+	if (!binder) return null;
+	const items = binder.items.map(toCollectionItemVM);
+	return {
+		id: binder.id,
+		name: binder.name,
+		...valueOf(items.map((item) => ({ quantity: item.quantity, unitPrice: item.currentMarketPrice }))),
+		items
+	};
 }
 
 export const createBinder = (ownerSub: string, rawName: string) => binderRepository.create(ownerSub, binderName(rawName));

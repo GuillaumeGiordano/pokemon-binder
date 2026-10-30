@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { CollectionError, createBinder, listBinders } from '$lib/server/services/collectionService';
+import { CollectionError, createBinder, getCollectionOverview } from '$lib/server/services/collectionService';
 import { field } from '$lib/utils/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => ({
-	binders: await listBinders(locals.user!.sub)
+	overview: await getCollectionOverview(locals.user!.sub)
 });
 
 export const actions: Actions = {

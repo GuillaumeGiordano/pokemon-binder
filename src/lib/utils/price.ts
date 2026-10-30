@@ -13,6 +13,20 @@ export function referencePrice(
 	return price.trend;
 }
 
+/** Rounded to the cent: sums of prices must not show floating-point noise (0.1 + 0.2). */
+export const roundCents = (value: number) => Math.round(value * 100) / 100;
+
+/** Value of lots (D23): quantity × unit market price; cards without a price are counted apart. */
+export function valueOf(lots: { quantity: number; unitPrice: number | null }[]) {
+	let value = 0;
+	let unpricedCount = 0;
+	for (const lot of lots) {
+		if (lot.unitPrice === null) unpricedCount += lot.quantity;
+		else value += lot.quantity * lot.unitPrice;
+	}
+	return { value: roundCents(value), unpricedCount };
+}
+
 /** How much `current` moved from `reference` (D17): amount and percentage. Null if unknown. */
 export function priceChange(
 	current: number | null,

@@ -9,6 +9,17 @@ export type BinderSummaryVM = {
 	lotCount: number;
 	/** Number of cards (sum of the quantities). */
 	cardCount: number;
+	/** Current market value in EUR (D23), cards without a price excluded. */
+	value: number;
+	/** Cards without a market price (not counted in `value`). */
+	unpricedCount: number;
+};
+
+/** The home page: all my binders and the value of the whole collection (D23). */
+export type CollectionOverviewVM = {
+	totalValue: number;
+	unpricedCount: number;
+	binders: BinderSummaryVM[];
 };
 
 /** A lot (D11): identical copies of a card. Amounts in EUR, per card. */
@@ -33,5 +44,8 @@ export type CollectionItemVM = {
 export type BinderDetailVM = {
 	id: string;
 	name: string;
+	/** Current market value in EUR (D23), cards without a price excluded. */
+	value: number;
+	unpricedCount: number;
 	items: CollectionItemVM[];
 };

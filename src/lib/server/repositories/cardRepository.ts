@@ -39,6 +39,16 @@ export const findCardWithLatestPrice = (id: string) =>
 
 export type CardWithLatestPrice = NonNullable<Awaited<ReturnType<typeof findCardWithLatestPrice>>>;
 
+/** Cards in at least one binder that were not refreshed since `since` (D21). */
+export const findOwnedCardIdsSyncedBefore = async (since: Date) =>
+	(
+		await prisma.card.findMany({
+			where: { items: { some: {} }, syncedAt: { lt: since } },
+			select: { id: true },
+			orderBy: { syncedAt: 'asc' }
+		})
+	).map((card) => card.id);
+
 /** Save a card fetched from TCGdex, with its set and today's price, in one transaction. */
 export async function saveCard(set: SetData, card: CardData, price: PriceData | null, day: Date) {
 	await prisma.$transaction([
