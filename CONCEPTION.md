@@ -65,6 +65,9 @@ Application web permettant de :
   dans `g2-hub`, console sur `http://localhost:5180`). Il faut y créer l'**application**
   « Pokémon Binder » (offre Auth), déclarer l'URL de retour OIDC **exacte**
   (ex. `http://localhost:5200/auth/callback`) et inviter les utilisateurs.
+- **Dépendance à TCGdex** : le 2026-10-30, l'API et les images TCGdex ont été indisponibles (404
+  texte brut sur tout `api.tcgdex.net`). L'app doit **fonctionner en mode dégradé** : la recherche
+  affiche « TCGdex indisponible », une carte déjà en cache reste consultable (D4).
 - **Numéros de carte non numériques** (`TG01`, `SWSH001`, `GG35`…) : le calcul « officielle ou
   secrète » (D19) ne peut pas se contenter de comparer des nombres.
 
