@@ -34,6 +34,7 @@ export function toCollectionItemVM(item: CollectionItemWithCard): CollectionItem
 			localId: item.card.localId,
 			imageUrl: item.card.imageUrl,
 			setName: item.card.set.name,
+			setLogoUrl: item.card.set.logoUrl,
 			officialCount: item.card.set.officialCount
 		},
 		binder: item.binder,

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Alert, Button, EmptyState, Input } from '@guillaumeg/ui';
 	import { ChevronLeft, ChevronRight, Search, SearchX } from '@lucide/svelte';
+	import CardImage from '$lib/components/card/CardImage.svelte';
 
 	let { data } = $props();
 
@@ -39,13 +40,15 @@
 		{#each search.results as card (card.id)}
 			<li>
 				<a href="/cartes/{card.id}" class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
-					{#if card.imageUrl}
-						<img src={card.imageUrl} alt={card.name} loading="lazy" class="aspect-[5/7] w-full rounded-md object-cover" />
-					{:else}
-						<div class="flex aspect-[5/7] w-full items-center justify-center rounded-md border text-sm opacity-60">
-							Pas d'image
-						</div>
-					{/if}
+					<CardImage
+						imageUrl={card.imageUrl}
+						name={card.name}
+						number={card.set ? `${card.localId}/${card.set.officialCount}` : card.localId}
+						setName={card.set?.name ?? null}
+						setLogoUrl={card.set?.logoUrl}
+						lazy
+						class="rounded-md"
+					/>
 					<span class="truncate text-sm font-semibold">{card.name}</span>
 					<span class="truncate text-xs opacity-70">
 						{card.localId}{card.set ? `/${card.set.officialCount} · ${card.set.name}` : ''}

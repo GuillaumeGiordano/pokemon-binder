@@ -25,7 +25,15 @@ export type CollectionOverviewVM = {
 /** A lot (D11): identical copies of a card. Amounts in EUR, per card. */
 export type CollectionItemVM = {
 	id: string;
-	card: { id: string; name: string; localId: string; imageUrl: string | null; setName: string; officialCount: number };
+	card: {
+		id: string;
+		name: string;
+		localId: string;
+		imageUrl: string | null;
+		setName: string;
+		setLogoUrl: string | null;
+		officialCount: number;
+	};
 	binder: { id: string; name: string };
 	variant: CardVariant;
 	condition: CardCondition;

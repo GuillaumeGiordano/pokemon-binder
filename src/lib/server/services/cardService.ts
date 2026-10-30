@@ -25,6 +25,28 @@ async function setsById(): Promise<Map<string, KnownSet>> {
 	return setsCache.byId;
 }
 
+let englishImagesCache: { at: number; byId: Map<string, string> } | null = null;
+
+/** English card images by card id (kept in memory like the sets list). Empty if unavailable. */
+async function englishImages(): Promise<Map<string, string>> {
+	if (englishImagesCache && Date.now() - englishImagesCache.at < SETS_CACHE_TTL_MS) return englishImagesCache.byId;
+	try {
+		const cards = await tcgdex.listEnglishCards();
+		const byId = new Map(cards.flatMap((card) => (card.image ? [[card.id, card.image] as const] : [])));
+		englishImagesCache = { at: Date.now(), byId };
+		return byId;
+	} catch (err) {
+		if (!(err instanceof TcgdexError)) throw err;
+		console.warn('[pokemon-binder] English images unavailable', err.message);
+		return new Map();
+	}
+}
+
+/** The card's image base: the French one, or the English one when TCGdex has none in French. */
+async function imageBaseOf(card: { id: string; image?: string }): Promise<string | undefined> {
+	return card.image ?? (await englishImages()).get(card.id);
+}
+
 /** A card id is `<setId>-<localId>`. */
 const setIdOf = (cardId: string, localId: string) => cardId.slice(0, cardId.length - localId.length - 1);
 
@@ -62,12 +84,21 @@ export async function searchCards(rawQuery: string, page: number): Promise<CardS
 			// Newest sets first; cards of an unknown set last.
 			.sort((a, b) => (b.known?.releaseRank ?? -1) - (a.known?.releaseRank ?? -1));
 
-		const results = cards.slice((page - 1) * PER_PAGE, page * PER_PAGE).map(({ card, known }) => ({
+		const pageCards = cards.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+		// Load the English images only when a card of this page needs one.
+		const english = pageCards.some(({ card }) => !card.image) ? await englishImages() : null;
+		const results = pageCards.map(({ card, known }) => ({
 			id: card.id,
 			name: card.name,
 			localId: card.localId,
-			imageUrl: tcgdex.cardImage(card.image, 'low'),
-			set: known ? { name: known.set.name, officialCount: known.set.cardCount.official } : null
+			imageUrl: tcgdex.cardImage(card.image ?? english?.get(card.id), 'low'),
+			set: known
+				? {
+						name: known.set.name,
+						officialCount: known.set.cardCount.official,
+						logoUrl: known.set.logo ? `${known.set.logo}.webp` : null
+					}
+				: null
 		}));
 
 		return { query, page, results, hasNextPage: cards.length > page * PER_PAGE, unavailable: false };
@@ -109,7 +140,7 @@ export async function syncCard(id: string): Promise<boolean> {
 			setId: card.set.id,
 			localId: card.localId,
 			name: card.name,
-			imageUrl: tcgdex.cardImage(card.image, 'high'),
+			imageUrl: tcgdex.cardImage(await imageBaseOf(card), 'high'),
 			rarity: card.rarity ?? null,
 			variants: variantsOf(card),
 			cardmarketId: card.thirdParty?.cardmarket ?? null

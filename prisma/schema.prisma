@@ -117,10 +117,11 @@ model CollectionItem {
   condition              CardCondition
   language               CardLanguage
   quantity               Int
-  /// Average price paid per card (D11, D20).
-  purchaseUnitPrice      Decimal?      @db.Decimal(10, 2)
-  /// Market trend frozen at acquisition (D17, D20).
-  acquisitionMarketPrice Decimal?      @db.Decimal(10, 2)
+  /// Average price paid per card (D11, D20). 4 decimals: a weighted average (2 × 0.50 + 1 × 1.00
+  /// = 0.6667) must not drift once multiplied back by the quantity; rounded to the cent on display.
+  purchaseUnitPrice      Decimal?      @db.Decimal(12, 4)
+  /// Market trend frozen at acquisition (D17, D20), same precision.
+  acquisitionMarketPrice Decimal?      @db.Decimal(12, 4)
   /// First acquisition (D20).
   acquiredAt             DateTime      @default(now())
 

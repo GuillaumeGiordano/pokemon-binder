@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Alert, Badge, Button, Input, NumberInput, toast } from '@guillaumeg/ui';
 	import { ArrowLeft, Save, Trash2 } from '@lucide/svelte';
+	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
 	import { CARD_CONDITION_LABELS, CARD_LANGUAGE_LABELS } from '$lib/records/collection';
 	import { formatDay, formatEur, formatSignedEur, formatSignedPercent } from '$lib/utils/format';
@@ -29,11 +30,14 @@
 
 <div class="mt-4 flex flex-col gap-6 md:flex-row">
 	<a href="/cartes/{lot.card.id}" class="mx-auto w-full max-w-xs md:mx-0">
-		{#if lot.card.imageUrl}
-			<img src={lot.card.imageUrl} alt={lot.card.name} class="aspect-[5/7] w-full rounded-xl object-cover" />
-		{:else}
-			<div class="flex aspect-[5/7] w-full items-center justify-center rounded-xl border opacity-60">Pas d'image</div>
-		{/if}
+		<CardImage
+			imageUrl={lot.card.imageUrl}
+			name={lot.card.name}
+			number="{lot.card.localId}/{lot.card.officialCount}"
+			setName={lot.card.setName}
+			setLogoUrl={lot.card.setLogoUrl}
+			class="rounded-xl"
+		/>
 	</a>
 
 	<div class="flex flex-1 flex-col gap-4">

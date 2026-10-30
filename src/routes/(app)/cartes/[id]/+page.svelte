@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Alert, Badge, Button, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
 	import { Plus } from '@lucide/svelte';
+	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANTS, CARD_VARIANT_LABELS } from '$lib/records/card';
 	import {
 		CARD_CONDITIONS,
@@ -31,11 +32,14 @@
 
 <div class="flex flex-col gap-6 md:flex-row">
 	<div class="mx-auto w-full max-w-xs md:mx-0">
-		{#if card.imageUrl}
-			<img src={card.imageUrl} alt={card.name} class="aspect-[5/7] w-full rounded-xl object-cover" />
-		{:else}
-			<div class="flex aspect-[5/7] w-full items-center justify-center rounded-xl border opacity-60">Pas d'image</div>
-		{/if}
+		<CardImage
+			imageUrl={card.imageUrl}
+			name={card.name}
+			number="{card.localId}/{card.set.officialCount}"
+			setName={card.set.name}
+			setLogoUrl={card.set.logoUrl}
+			class="rounded-xl"
+		/>
 	</div>
 
 	<div class="flex flex-1 flex-col gap-4">

@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Alert, Badge, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
 	import { Pencil, Search, Trash2 } from '@lucide/svelte';
+	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
 	import { formatEur } from '$lib/utils/format';
 
@@ -82,18 +83,15 @@
 			<li>
 				<a href="/lots/{item.id}" class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
 					<div class="relative">
-						{#if item.card.imageUrl}
-							<img
-								src={item.card.imageUrl}
-								alt={item.card.name}
-								loading="lazy"
-								class="aspect-[5/7] w-full rounded-md object-cover"
-							/>
-						{:else}
-							<div class="flex aspect-[5/7] w-full items-center justify-center rounded-md border text-sm opacity-60">
-								Pas d'image
-							</div>
-						{/if}
+						<CardImage
+							imageUrl={item.card.imageUrl}
+							name={item.card.name}
+							number="{item.card.localId}/{item.card.officialCount}"
+							setName={item.card.setName}
+							setLogoUrl={item.card.setLogoUrl}
+							lazy
+							class="rounded-md"
+						/>
 						{#if item.quantity > 1}
 							<span class="absolute top-1 right-1"><Badge label="×{item.quantity}" variant="primary" /></span>
 						{/if}

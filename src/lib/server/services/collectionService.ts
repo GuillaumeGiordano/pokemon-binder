@@ -61,7 +61,8 @@ function weightedAverage(
 	if (known.length === 0) return null;
 	const total = known.reduce((sum, [price, qty]) => sum.add(price.mul(qty)), new Prisma.Decimal(0));
 	const count = known.reduce((sum, [, qty]) => sum + qty, 0);
-	return total.div(count).toDecimalPlaces(2);
+	// 4 decimals, like the column: rounding to the cent here would drift once multiplied back.
+	return total.div(count).toDecimalPlaces(4);
 }
 
 // --- Binders ---
@@ -182,10 +183,16 @@ export async function updateLot(
 	ownerSub: string,
 	input: { quantity: string; purchaseUnitPrice: string }
 ): Promise<boolean> {
+	const lot = await itemRepository.findOwned(id, ownerSub);
+	if (!lot) return false;
+	const paid = purchasePrice(input.purchaseUnitPrice);
+	// The form shows the average rounded to the cent (0,67): sent back unchanged, it must not
+	// overwrite the precise average (0.6667).
+	const unchanged = paid !== null && lot.purchaseUnitPrice?.toFixed(2) === paid;
 	return (
 		(await itemRepository.updateOwned(id, ownerSub, {
 			quantity: quantity(input.quantity),
-			purchaseUnitPrice: purchasePrice(input.purchaseUnitPrice)
+			...(unchanged ? {} : { purchaseUnitPrice: paid })
 		})) > 0
 	);
 }

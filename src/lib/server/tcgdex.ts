@@ -2,8 +2,10 @@
 // Docs: https://tcgdex.dev/rest — filters are partial and case-insensitive by default,
 // `eq:` is exact, `|` separates several values.
 
-const BASE_URL = 'https://api.tcgdex.net/v2/fr';
+const API_URL = 'https://api.tcgdex.net/v2';
 const TIMEOUT_MS = 8000;
+/** The full English card list is bigger: give it more time. */
+const LIST_TIMEOUT_MS = 30000;
 
 /** TCGdex is unreachable or answered with an error. */
 export class TcgdexError extends Error {}
@@ -41,10 +43,10 @@ export type TcgdexCard = TcgdexCardBrief & {
 	pricing?: { cardmarket?: TcgdexCardmarketPricing | null };
 };
 
-async function get<T>(path: string): Promise<T | null> {
+async function get<T>(path: string, { lang = 'fr', timeoutMs = TIMEOUT_MS } = {}): Promise<T | null> {
 	let response: Response;
 	try {
-		response = await fetch(`${BASE_URL}${path}`, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+		response = await fetch(`${API_URL}/${lang}${path}`, { signal: AbortSignal.timeout(timeoutMs) });
 	} catch (err) {
 		throw new TcgdexError(`TCGdex unreachable: ${(err as Error).message}`);
 	}
@@ -78,4 +80,13 @@ export const getCard = (id: string) => get<TcgdexCard>(`/cards/${encodeURICompon
 /** Every set, oldest first (TCGdex's default order is the release date). */
 export async function listSets(): Promise<TcgdexSetBrief[]> {
 	return (await get<TcgdexSetBrief[]>('/sets')) ?? [];
+}
+
+/**
+ * Every English card (id → image), for the French cards TCGdex has no image for: same card id,
+ * same artwork. Measured 2026-10-30: 3 856 / 22 201 French cards without image, 2 186 of them
+ * with an English one. One call (~2 MB) instead of one per card.
+ */
+export async function listEnglishCards(): Promise<TcgdexCardBrief[]> {
+	return (await get<TcgdexCardBrief[]>('/cards', { lang: 'en', timeoutMs: LIST_TIMEOUT_MS })) ?? [];
 }

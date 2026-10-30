@@ -7,7 +7,7 @@ export type CardSearchResultVM = {
 	localId: string;
 	imageUrl: string | null;
 	/** Null when the set is not known (sets list unavailable). */
-	set: { name: string; officialCount: number } | null;
+	set: { name: string; officialCount: number; logoUrl: string | null } | null;
 };
 
 export type CardSearchVM = {
