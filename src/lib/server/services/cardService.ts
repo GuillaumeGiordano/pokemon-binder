@@ -60,7 +60,7 @@ function parseNumberQuery(query: string): { number: number; official: number | n
 /** Search by name ("pikachu") or by number ("025", "025/198"), newest sets first. */
 export async function searchCards(rawQuery: string, page: number): Promise<CardSearchVM> {
 	const query = rawQuery.trim();
-	const empty: CardSearchVM = { query, page, results: [], hasNextPage: false, unavailable: false };
+	const empty: CardSearchVM = { query, page, results: [], hasNextPage: false, unavailable: false, ignoredTotal: null };
 	if (query.length < 2 && !/^\d+$/.test(query)) return empty;
 
 	try {
@@ -72,17 +72,20 @@ export async function searchCards(rawQuery: string, page: number): Promise<CardS
 			setsById().catch(() => new Map<string, KnownSet>())
 		]);
 
-		const cards = found
+		const candidates = found
 			.map((card) => ({ card, known: sets.get(setIdOf(card.id, card.localId)) }))
-			.filter(({ card, known }) => {
-				if (!byNumber) return true;
-				// "25" also matched 125, 250, SWSH025…: keep the exact printed number only.
-				if (!/^\d+$/.test(card.localId) || Number(card.localId) !== byNumber.number) return false;
-				// "025/198": keep the sets with 198 printed cards (when the set is known).
-				return !byNumber.official || !known || known.set.cardCount.official === byNumber.official;
-			})
+			// "25" also matched 125, 250, SWSH025…: keep the exact printed number only.
+			.filter(({ card }) => !byNumber || (/^\d+$/.test(card.localId) && Number(card.localId) === byNumber.number))
 			// Newest sets first; cards of an unknown set last.
 			.sort((a, b) => (b.known?.releaseRank ?? -1) - (a.known?.releaseRank ?? -1));
+		// "025/198": keep the sets with 198 printed cards (when the set is known)...
+		const withTotal = byNumber?.official
+			? candidates.filter(({ known }) => !known || known.set.cardCount.official === byNumber.official)
+			: candidates;
+		// ...unless no set has that total: likely a misread digit (scan) or typo, so show every
+		// card with that number rather than nothing.
+		const ignoredTotal = byNumber?.official && withTotal.length === 0 && candidates.length > 0 ? byNumber.official : null;
+		const cards = ignoredTotal ? candidates : withTotal;
 
 		const pageCards = cards.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 		// Load the English images only when a card of this page needs one.
@@ -101,7 +104,7 @@ export async function searchCards(rawQuery: string, page: number): Promise<CardS
 				: null
 		}));
 
-		return { query, page, results, hasNextPage: cards.length > page * PER_PAGE, unavailable: false };
+		return { query, page, results, hasNextPage: cards.length > page * PER_PAGE, unavailable: false, ignoredTotal };
 	} catch (err) {
 		if (!(err instanceof TcgdexError)) throw err;
 		console.error('[pokemon-binder] card search failed', err.message);

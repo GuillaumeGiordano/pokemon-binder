@@ -18,8 +18,8 @@ Application web permettant de :
 
 | Version | Contenu | Statut |
 |---|---|---|
-| **V1** | Recherche par nom / numéro / extension + ajout au classeur + valeur | 🟡 En conception |
-| V2 | Scan : OCR du numéro de carte (ex. `025/198`) via Tesseract.js | ⚪ Plus tard |
+| **V1** | Recherche par nom / numéro / extension + ajout au classeur + valeur | 🟢 Codée, testée en local |
+| V2 | Scan : OCR du numéro de carte (ex. `025/198`) via Tesseract.js | 🟡 Codée (D33), à tester sur téléphone |
 | V3 | Reconnaissance visuelle (embeddings CLIP + recherche de similarité) | ⚪ Peut-être |
 
 ---
@@ -60,6 +60,7 @@ Application web permettant de :
 | D30 | 2026-10-30 | **Profils** : un compte (G2 Hub) contient des **profils** (ex. « Charlie », « Papa »), **un profil = une collection**, sans sous-classeurs. **Révise D15** (classeurs de rangement) et **D18** (la complétion se calcule **par profil**, plus sur tout le compte) | Collection familiale : chaque personne suit ses propres cartes |
 | D31 | 2026-10-30 | **Accueil du compte** : valeur totale de la famille + valeur de chaque profil ; un clic entre dans un profil (pas d'écran « Qui collectionne ? ») | Vue d'ensemble conservée, un clic pour entrer |
 | D32 | 2026-10-30 | Dans la vue d'une extension, une carte possédée en **plusieurs lots** (ex. Normale + Reverse) s'affiche une fois ; le clic ouvre une **popin listant ses lots** | Accéder à chaque lot sans dupliquer la carte dans la grille |
+| D33 | 2026-10-30 | **Scan par photo (V2, option A)** : bouton « Scanner » sur la recherche → appareil photo (`<input capture>`) → **OCR Tesseract.js dans le navigateur** du numéro « 025/198 » → recherche par numéro. **5 lectures** de la photo (entière, tiers bas, bande bas-gauche ×1 / ×2, bloc) et **vote majoritaire**. Le numéro reste modifiable ; si aucune extension n'a le total lu, toutes les cartes de ce numéro sont proposées | Gratuit, sans serveur. Mesuré : aucune lecture seule n'est fiable (025/198 lu 025/195), le vote corrige. Limites : photo de la carte entière et droite ; numéros de Galerie (`TG01/TG30`) non gérés ; un total mal lu peut tomber sur une vraie extension (Tempête Argentée, 195) |
 
 ---
 

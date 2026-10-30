@@ -1,9 +1,17 @@
 <script lang="ts">
-	import { Alert, Button, EmptyState, Input } from '@guillaumeg/ui';
+	import { goto } from '$app/navigation';
+	import { Alert, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
 	import { ChevronLeft, ChevronRight, Search, SearchX } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
+	import ScanButton from '$lib/components/scan/ScanButton.svelte';
 
 	let { data } = $props();
+
+	/** The number read on the photo becomes the search; the field stays editable to fix a misread. */
+	async function searchScanned(cardNumber: string) {
+		await goto(`?q=${encodeURIComponent(cardNumber)}${profileParam ? `&${profileParam}` : ''}`);
+		toast.info(`Numéro lu : ${cardNumber}. Corrige-le dans le champ s'il est faux.`);
+	}
 
 	const search = $derived(data.search);
 	/** The profile the search was started from, kept in every link. */
@@ -17,7 +25,10 @@
 	<title>Recherche · Pokémon Binder</title>
 </svelte:head>
 
-<h1 class="mb-4 text-2xl font-bold">Rechercher une carte</h1>
+<div class="mb-4 flex items-center justify-between gap-2">
+	<h1 class="text-2xl font-bold">Rechercher une carte</h1>
+	<ScanButton onRead={searchScanned} />
+</div>
 
 <form method="GET" class="mb-6 flex items-end gap-2">
 	{#if data.profileId}
@@ -30,7 +41,7 @@
 			value={search.query}
 			icon={Search}
 			placeholder="Pikachu, 025, 025/198…"
-			hint="Par nom ou par numéro (celui imprimé en bas de la carte)."
+			hint="Par nom ou par numéro (en bas de la carte). Pour scanner : photographie toute la carte, droite, sans reflet."
 		/>
 	</div>
 	<Button type="submit">Rechercher</Button>
@@ -43,6 +54,13 @@
 {:else if search.query && search.results.length === 0}
 	<EmptyState icon={SearchX} title="Aucune carte trouvée" description="Vérifie l'orthographe ou essaie avec le numéro." />
 {:else if search.results.length > 0}
+	{#if search.ignoredTotal}
+		<div class="mb-4">
+			<Alert variant="info" dismissible={false}>
+				Aucune extension ne compte {search.ignoredTotal} cartes (numéro mal lu ?) : voici toutes les cartes avec ce numéro.
+			</Alert>
+		</div>
+	{/if}
 	<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 		{#each search.results as card (card.id)}
 			<li>

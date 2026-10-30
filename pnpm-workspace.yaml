@@ -1,6 +1,7 @@
 # Build-script approval, same setup as the other projects: newer pnpm reads
 # onlyBuiltDependencies / ignoredBuiltDependencies, older pnpm reads allowBuilds.
 # @guillaumeg/ui ships a precompiled `package/` folder → its build is skipped.
+# tesseract.js only runs a donation message (opencollective-postinstall) → skipped.
 
 onlyBuiltDependencies:
   - "@prisma/client"
@@ -11,6 +12,7 @@ onlyBuiltDependencies:
 ignoredBuiltDependencies:
   - "@guillaumeg/ui"
   - "@parcel/watcher"
+  - tesseract.js
 
 allowBuilds:
   "@guillaumeg/ui": false
@@ -18,5 +20,6 @@ allowBuilds:
   "@prisma/engines": true
   esbuild: true
   prisma: true
+  tesseract.js: false
 
 verifyDepsBeforeRun: false

@@ -17,6 +17,8 @@ export type CardSearchVM = {
 	hasNextPage: boolean;
 	/** TCGdex unavailable: results could not be loaded. */
 	unavailable: boolean;
+	/** "025/195": no set has 195 printed cards, so every card n° 025 is shown instead. */
+	ignoredTotal: number | null;
 };
 
 /** A card's detail page. */
