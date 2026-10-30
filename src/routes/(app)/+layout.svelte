@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button, ThemeToggle } from '@guillaumeg/ui';
-	import { LogOut, Search } from '@lucide/svelte';
+	import { Layers, LogOut, Search } from '@lucide/svelte';
 
 	let { data, children } = $props();
 </script>
@@ -9,6 +9,7 @@
 	<a href="/" class="text-xl font-bold">Pokémon Binder</a>
 	<div class="flex items-center gap-2">
 		<Button href="/recherche" variant="ghost" icon={Search} aria-label="Rechercher une carte" />
+		<Button href="/extensions" variant="ghost" icon={Layers} aria-label="Complétion des extensions" />
 		<span class="hidden text-sm sm:inline">{data.user.name || data.user.email}</span>
 		<ThemeToggle />
 		<form method="POST" action="/auth/logout">

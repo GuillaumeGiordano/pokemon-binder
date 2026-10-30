@@ -59,32 +59,23 @@ async function get<T>(path: string): Promise<T | null> {
 export const cardImage = (base: string | undefined, quality: 'low' | 'high') =>
 	base ? `${base}/${quality}.webp` : null;
 
-/** Cards whose name contains `name`, newest sets first. */
-export async function searchCardsByName(name: string, page: number, perPage: number): Promise<TcgdexCardBrief[]> {
-	const params = new URLSearchParams({
-		name,
-		'sort:field': 'releaseDate',
-		'sort:order': 'DESC',
-		'pagination:page': String(page),
-		'pagination:itemsPerPage': String(perPage)
-	});
-	return (await get<TcgdexCardBrief[]>(`/cards?${params}`)) ?? [];
+// Verified on the live API (2026-10-30): cards have no `releaseDate`, so `sort:field=releaseDate`
+// is ignored on /cards; and `localId=eq:025` finds nothing (compared as the number 25). The search
+// therefore fetches every match and sorts / filters / paginates on our side.
+
+/** Every card whose name contains `name` (case-insensitive), unsorted. */
+export async function searchCardsByName(name: string): Promise<TcgdexCardBrief[]> {
+	return (await get<TcgdexCardBrief[]>(`/cards?${new URLSearchParams({ name })}`)) ?? [];
 }
 
-/** Cards with one of these exact numbers in their set (e.g. "025" or "25"), newest sets first. */
-export async function searchCardsByNumber(localIds: string[], page: number, perPage: number): Promise<TcgdexCardBrief[]> {
-	const params = new URLSearchParams({
-		localId: `eq:${localIds.join('|')}`,
-		'sort:field': 'releaseDate',
-		'sort:order': 'DESC',
-		'pagination:page': String(page),
-		'pagination:itemsPerPage': String(perPage)
-	});
-	return (await get<TcgdexCardBrief[]>(`/cards?${params}`)) ?? [];
+/** Every card whose number CONTAINS `digits` ("25" → 25, 025, 125, 250…): filter exactly afterwards. */
+export async function searchCardsByNumberContaining(digits: string): Promise<TcgdexCardBrief[]> {
+	return (await get<TcgdexCardBrief[]>(`/cards?${new URLSearchParams({ localId: digits })}`)) ?? [];
 }
 
 export const getCard = (id: string) => get<TcgdexCard>(`/cards/${encodeURIComponent(id)}`);
 
+/** Every set, oldest first (TCGdex's default order is the release date). */
 export async function listSets(): Promise<TcgdexSetBrief[]> {
 	return (await get<TcgdexSetBrief[]>('/sets')) ?? [];
 }

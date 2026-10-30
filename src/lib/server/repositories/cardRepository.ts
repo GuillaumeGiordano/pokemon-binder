@@ -39,6 +39,13 @@ export const findCardWithLatestPrice = (id: string) =>
 
 export type CardWithLatestPrice = NonNullable<Awaited<ReturnType<typeof findCardWithLatestPrice>>>;
 
+/** The distinct cards a user owns, in any of their binders (D18), with their set. */
+export const findOwnedCards = (ownerSub: string) =>
+	prisma.card.findMany({
+		where: { items: { some: { binder: { ownerSub } } } },
+		select: { localId: true, set: true }
+	});
+
 /** Cards in at least one binder that were not refreshed since `since` (D21). */
 export const findOwnedCardIdsSyncedBefore = async (since: Date) =>
 	(

@@ -10,15 +10,18 @@ import type { CardDetailVM, CardSearchVM } from '$lib/viewmodels/card';
 const PER_PAGE = 30;
 /** A cached card older than this is refreshed from TCGdex. */
 const CARD_CACHE_TTL_MS = 24 * 3600 * 1000;
-/** The sets list (names + counts for the search results) is kept in memory. */
+/** The sets list (names, counts, release order for the search results) is kept in memory. */
 const SETS_CACHE_TTL_MS = 24 * 3600 * 1000;
 
-let setsCache: { at: number; byId: Map<string, TcgdexSetBrief> } | null = null;
+type KnownSet = { set: TcgdexSetBrief; releaseRank: number };
 
-async function setsById(): Promise<Map<string, TcgdexSetBrief>> {
+let setsCache: { at: number; byId: Map<string, KnownSet> } | null = null;
+
+/** Sets by id, with their rank in release order (0 = oldest), as TCGdex lists them. */
+async function setsById(): Promise<Map<string, KnownSet>> {
 	if (setsCache && Date.now() - setsCache.at < SETS_CACHE_TTL_MS) return setsCache.byId;
 	const sets = await tcgdex.listSets();
-	setsCache = { at: Date.now(), byId: new Map(sets.map((set) => [set.id, set])) };
+	setsCache = { at: Date.now(), byId: new Map(sets.map((set, releaseRank) => [set.id, { set, releaseRank }])) };
 	return setsCache.byId;
 }
 
@@ -26,17 +29,13 @@ async function setsById(): Promise<Map<string, TcgdexSetBrief>> {
 const setIdOf = (cardId: string, localId: string) => cardId.slice(0, cardId.length - localId.length - 1);
 
 /** "25", "025" or "025/198" → the number in the set (and the printed total, if given). */
-function parseNumberQuery(query: string): { localIds: string[]; official: number | null } | null {
+function parseNumberQuery(query: string): { number: number; official: number | null } | null {
 	const match = /^(\d{1,3})\s*(?:\/\s*(\d{1,3}))?$/.exec(query);
 	if (!match) return null;
-	const number = String(Number(match[1]));
-	return {
-		localIds: [...new Set([number, number.padStart(3, '0')])],
-		official: match[2] ? Number(match[2]) : null
-	};
+	return { number: Number(match[1]), official: match[2] ? Number(match[2]) : null };
 }
 
-/** Search by name ("pikachu") or by number ("025", "025/198"). */
+/** Search by name ("pikachu") or by number ("025", "025/198"), newest sets first. */
 export async function searchCards(rawQuery: string, page: number): Promise<CardSearchVM> {
 	const query = rawQuery.trim();
 	const empty: CardSearchVM = { query, page, results: [], hasNextPage: false, unavailable: false };
@@ -44,28 +43,34 @@ export async function searchCards(rawQuery: string, page: number): Promise<CardS
 
 	try {
 		const byNumber = parseNumberQuery(query);
-		const [cards, sets] = await Promise.all([
+		const [found, sets] = await Promise.all([
 			byNumber
-				? tcgdex.searchCardsByNumber(byNumber.localIds, page, PER_PAGE)
-				: tcgdex.searchCardsByName(query, page, PER_PAGE),
-			setsById().catch(() => new Map<string, TcgdexSetBrief>())
+				? tcgdex.searchCardsByNumberContaining(String(byNumber.number))
+				: tcgdex.searchCardsByName(query),
+			setsById().catch(() => new Map<string, KnownSet>())
 		]);
 
-		const results = cards
-			.map((card) => {
-				const set = sets.get(setIdOf(card.id, card.localId));
-				return {
-					id: card.id,
-					name: card.name,
-					localId: card.localId,
-					imageUrl: tcgdex.cardImage(card.image, 'low'),
-					set: set ? { name: set.name, officialCount: set.cardCount.official } : null
-				};
+		const cards = found
+			.map((card) => ({ card, known: sets.get(setIdOf(card.id, card.localId)) }))
+			.filter(({ card, known }) => {
+				if (!byNumber) return true;
+				// "25" also matched 125, 250, SWSH025…: keep the exact printed number only.
+				if (!/^\d+$/.test(card.localId) || Number(card.localId) !== byNumber.number) return false;
+				// "025/198": keep the sets with 198 printed cards (when the set is known).
+				return !byNumber.official || !known || known.set.cardCount.official === byNumber.official;
 			})
-			// "025/198": keep the sets with 198 printed cards (when the sets list is known).
-			.filter((card) => !byNumber?.official || !card.set || card.set.officialCount === byNumber.official);
+			// Newest sets first; cards of an unknown set last.
+			.sort((a, b) => (b.known?.releaseRank ?? -1) - (a.known?.releaseRank ?? -1));
 
-		return { query, page, results, hasNextPage: cards.length === PER_PAGE, unavailable: false };
+		const results = cards.slice((page - 1) * PER_PAGE, page * PER_PAGE).map(({ card, known }) => ({
+			id: card.id,
+			name: card.name,
+			localId: card.localId,
+			imageUrl: tcgdex.cardImage(card.image, 'low'),
+			set: known ? { name: known.set.name, officialCount: known.set.cardCount.official } : null
+		}));
+
+		return { query, page, results, hasNextPage: cards.length > page * PER_PAGE, unavailable: false };
 	} catch (err) {
 		if (!(err instanceof TcgdexError)) throw err;
 		console.error('[pokemon-binder] card search failed', err.message);
