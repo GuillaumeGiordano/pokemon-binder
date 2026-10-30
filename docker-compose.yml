@@ -1,0 +1,23 @@
+# Local development database only. These credentials are NOT secrets.
+# Port 5434: 5432 (ShareMoment) and 5433 (G2 Hub) are already used locally.
+services:
+  db:
+    image: postgres:17
+    container_name: pokemon-binder-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pokemonbinder
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: pokemonbinder
+    ports:
+      - '5434:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pokemonbinder -d pokemonbinder']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

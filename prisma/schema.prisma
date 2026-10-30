@@ -1,0 +1,129 @@
+// Pokémon Binder — data model (CONCEPTION.md §6)
+// Two parts: a local cache of TCGdex shared by every user (CardSet, Card, PriceSnapshot)
+// and each user's collection (Binder, CollectionItem), scoped by the G2 Hub `sub`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/server/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Variants a card can exist in (TCGdex `variants`).
+enum CardVariant {
+  NORMAL
+  REVERSE
+  HOLO
+  FIRST_EDITION
+}
+
+/// Cardmarket condition scale (D12).
+enum CardCondition {
+  MT
+  NM
+  EX
+  GD
+  LP
+  PL
+  PO
+}
+
+/// International card languages only — no Japanese (D10).
+enum CardLanguage {
+  FR
+  EN
+  DE
+  IT
+  ES
+  PT
+}
+
+// --- Reference data: local cache of TCGdex ---
+
+model CardSet {
+  /// TCGdex set id, e.g. "sv01".
+  id            String  @id
+  /// French name, e.g. "Écarlate et Violet".
+  name          String
+  logoUrl       String?
+  symbolUrl     String?
+  /// Printed numbering, e.g. 198.
+  officialCount Int
+  /// Including secret cards, e.g. 258.
+  totalCount    Int
+  cards         Card[]
+}
+
+model Card {
+  /// TCGdex card id, e.g. "sv01-025" — the card reference (D7).
+  id           String           @id
+  setId        String
+  set          CardSet          @relation(fields: [setId], references: [id])
+  /// Number in the set, e.g. "025" (may be non-numeric: "TG01", "SWSH001"…).
+  localId      String
+  /// French name.
+  name         String
+  imageUrl     String?
+  rarity       String?
+  /// Variants that exist for this card.
+  variants     CardVariant[]
+  cardmarketId Int?
+  /// Last refresh from TCGdex.
+  syncedAt     DateTime
+  prices       PriceSnapshot[]
+  items        CollectionItem[]
+
+  @@index([setId])
+}
+
+/// One row per card per day (D4, D21). Amounts in EUR.
+model PriceSnapshot {
+  id        String   @id @default(uuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  trend     Decimal? @db.Decimal(10, 2)
+  /// Reverse / holo version.
+  trendHolo Decimal? @db.Decimal(10, 2)
+  low       Decimal? @db.Decimal(10, 2)
+  avg       Decimal? @db.Decimal(10, 2)
+
+  @@unique([cardId, date])
+}
+
+// --- Collection: one per user ---
+
+model Binder {
+  id        String           @id @default(uuid())
+  /// G2 Hub `sub` of the owner (D6) — no User table.
+  ownerSub  String
+  name      String
+  createdAt DateTime         @default(now())
+  items     CollectionItem[]
+
+  @@index([ownerSub])
+}
+
+/// A lot of identical copies (D11). Adding an identical copy merges into it (D20).
+model CollectionItem {
+  id                     String        @id @default(uuid())
+  binderId               String
+  binder                 Binder        @relation(fields: [binderId], references: [id], onDelete: Cascade)
+  cardId                 String
+  card                   Card          @relation(fields: [cardId], references: [id])
+  variant                CardVariant
+  condition              CardCondition
+  language               CardLanguage
+  quantity               Int
+  /// Average price paid per card (D11, D20).
+  purchaseUnitPrice      Decimal?      @db.Decimal(10, 2)
+  /// Market trend frozen at acquisition (D17, D20).
+  acquisitionMarketPrice Decimal?      @db.Decimal(10, 2)
+  /// First acquisition (D20).
+  acquiredAt             DateTime      @default(now())
+
+  @@unique([binderId, cardId, variant, condition, language])
+  @@index([cardId])
+}

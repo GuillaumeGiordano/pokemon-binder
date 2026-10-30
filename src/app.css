@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@import '@guillaumeg/ui/styles/tokens.css'; /* base tokens + blue by default */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html,
+body {
+	background: var(--bg-base);
+	color: var(--text-base);
+	min-height: 100dvh;
+}
+
+body {
+	/* An element wider than the viewport must never widen the page on mobile. */
+	overflow-x: clip;
+}

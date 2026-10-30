@@ -1,0 +1,41 @@
+{
+	"name": "pokemon-binder",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --port 5200",
+		"build": "vite build",
+		"preview": "vite preview --port 5200",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"db:up": "docker compose up -d",
+		"db:down": "docker compose down",
+		"db:push": "prisma db push",
+		"db:generate": "prisma generate",
+		"db:studio": "prisma studio"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "^5.5.7",
+		"@sveltejs/kit": "^2.70.3",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@tailwindcss/vite": "^4.3.3",
+		"@types/node": "^26.6.6",
+		"@types/pg": "^8.23.1",
+		"dotenv": "^18.0.9",
+		"prisma": "^7.10.1",
+		"sass-embedded": "^1.107.0",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.7",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^6.0.3",
+		"vite": "^8.3.5"
+	},
+	"dependencies": {
+		"@guillaumeg/ui": "github:GuillaumeGiordano/my-components",
+		"@lucide/svelte": "^1.64.0",
+		"@prisma/adapter-pg": "^7.10.1",
+		"@prisma/client": "^7.10.1",
+		"pg": "^8.23.1"
+	}
+}
