@@ -1,4 +1,4 @@
-// Presentation maps for the lots of a binder (labels shown in the UI).
+// Presentation maps for the lots of a profile (labels shown in the UI).
 
 /** Cardmarket condition scale (D12), best first. */
 export const CARD_CONDITIONS = ['MT', 'NM', 'EX', 'GD', 'LP', 'PL', 'PO'] as const;

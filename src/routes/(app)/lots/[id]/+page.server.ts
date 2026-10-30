@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { CollectionError, deleteLot, getLot, updateLot } from '$lib/server/services/collectionService';
+import { CollectionError, deleteLot, getLot, updateLot } from '$lib/server/services/profileService';
 import { field } from '$lib/utils/form';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -28,6 +28,7 @@ export const actions: Actions = {
 	delete: async ({ params, locals }) => {
 		const lot = await getLot(params.id, locals.user!.sub);
 		if (!lot || !(await deleteLot(params.id, locals.user!.sub))) error(404, 'Lot introuvable.');
-		redirect(303, `/classeurs/${lot.binder.id}`);
+		// Back to the set seen by the profile, where the lot was.
+		redirect(303, `/profils/${lot.profile.id}/extensions/${lot.card.setId}`);
 	}
 };

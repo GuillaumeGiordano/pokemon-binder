@@ -2,7 +2,7 @@ import * as cardRepository from '$lib/server/repositories/cardRepository';
 import { syncCard, today } from '$lib/server/services/cardService';
 import { TcgdexError } from '$lib/server/tcgdex';
 
-// Daily price refresh (D21): every card in at least one binder gets today's price snapshot.
+// Daily price refresh (D21): every card in at least one profile gets today's price snapshot.
 // TCGdex updates its prices once a day, so a card synced today is skipped. The job runs in the
 // server process (started from hooks.server.ts `init`) and checks every hour: it is idempotent,
 // so a restart or a missed hour only delays the refresh.

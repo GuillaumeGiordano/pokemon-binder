@@ -1,4 +1,7 @@
-/** Completion of a set (D16, D19): one card counts once, whatever its variant. */
+import type { CardVariant } from '$lib/records/card';
+import type { CardCondition, CardLanguage } from '$lib/records/collection';
+
+/** Completion of a set for a profile (D16, D19, D30): one card counts once, whatever its variant. */
 export type SetCompletionVM = {
 	id: string;
 	name: string;
@@ -14,19 +17,33 @@ export type SetCompletionVM = {
 	percent: number;
 };
 
-/** A card of a set, owned or missing. */
+/** A lot of a card, as listed in the popin of a set's grid (D32). */
+export type SetCardLotVM = {
+	id: string;
+	variant: CardVariant;
+	condition: CardCondition;
+	language: CardLanguage;
+	quantity: number;
+	/** Latest market price per card, EUR. */
+	currentMarketPrice: number | null;
+};
+
+/** A card of a set, owned by the profile or missing. */
 export type SetCardVM = {
 	id: string;
 	localId: string;
 	name: string;
 	imageUrl: string | null;
-	/** Copies owned over all binders (0: missing). */
+	/** Copies owned by the profile (0: missing). */
 	quantity: number;
 	/** Out of the printed numbering (D19). */
 	secret: boolean;
+	/** The profile's lots of this card (empty: missing). */
+	lots: SetCardLotVM[];
 };
 
-/** Every card of a set, to see what is owned and what is missing. */
+/** Every card of a set, to see what a profile owns and what is missing. */
 export type SetDetailVM = SetCompletionVM & {
+	profile: { id: string; name: string };
 	cards: SetCardVM[];
 };

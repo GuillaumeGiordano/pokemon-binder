@@ -6,7 +6,11 @@
 	let { data } = $props();
 
 	const search = $derived(data.search);
-	const pageHref = (page: number) => `?q=${encodeURIComponent(search.query)}&page=${page}`;
+	/** The profile the search was started from, kept in every link. */
+	const profileParam = $derived(data.profileId ? `profil=${encodeURIComponent(data.profileId)}` : '');
+	const pageHref = (page: number) =>
+		`?q=${encodeURIComponent(search.query)}&page=${page}${profileParam ? `&${profileParam}` : ''}`;
+	const cardHref = (id: string) => `/cartes/${id}${profileParam ? `?${profileParam}` : ''}`;
 </script>
 
 <svelte:head>
@@ -16,6 +20,9 @@
 <h1 class="mb-4 text-2xl font-bold">Rechercher une carte</h1>
 
 <form method="GET" class="mb-6 flex items-end gap-2">
+	{#if data.profileId}
+		<input type="hidden" name="profil" value={data.profileId} />
+	{/if}
 	<div class="flex-1">
 		<Input
 			name="q"
@@ -39,7 +46,7 @@
 	<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 		{#each search.results as card (card.id)}
 			<li>
-				<a href="/cartes/{card.id}" class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
+				<a href={cardHref(card.id)} class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
 					<CardImage
 						imageUrl={card.imageUrl}
 						name={card.name}

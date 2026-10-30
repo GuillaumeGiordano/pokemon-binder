@@ -1,31 +1,33 @@
-import * as binderRepository from '$lib/server/repositories/binderRepository';
+import * as profileRepository from '$lib/server/repositories/profileRepository';
 import * as itemRepository from '$lib/server/repositories/collectionItemRepository';
-import { toBinderSummaryVM, toCollectionItemVM } from '$lib/server/mappers/collectionMapper';
+import { toCollectionItemVM, toProfileSummaryVM } from '$lib/server/mappers/collectionMapper';
 import { getCardDetail } from '$lib/server/services/cardService';
 import { Prisma } from '$lib/server/prisma/client';
 import { CARD_VARIANTS, type CardVariant } from '$lib/records/card';
 import { CARD_CONDITIONS, CARD_LANGUAGES, type CardCondition, type CardLanguage } from '$lib/records/collection';
+import { isOfficialNumber } from '$lib/utils/cardNumber';
 import { parseEuroInput, referencePrice, roundCents, valueOf } from '$lib/utils/price';
 import type {
-	BinderDetailVM,
-	BinderSummaryVM,
+	AccountOverviewVM,
 	CollectionItemVM,
-	CollectionOverviewVM
+	ProfileDetailVM,
+	ProfileSetVM,
+	ProfileSummaryVM
 } from '$lib/viewmodels/collection';
 
-// Binders (D15) and lots (D11): adding an identical copy merges into the existing lot with
-// weighted average prices (D20); the market price is frozen at acquisition (D17).
+// Profiles of an account (D30) and their lots (D11): adding an identical copy merges into the
+// existing lot with weighted average prices (D20); the market price is frozen at acquisition (D17).
 
 /** A user input the service refuses: its message is shown in the form. */
 export class CollectionError extends Error {}
 
-const BINDER_NAME_MAX = 60;
+const PROFILE_NAME_MAX = 60;
 const QUANTITY_MAX = 999;
 
-function binderName(raw: string): string {
+function profileName(raw: string): string {
 	const name = raw.trim();
-	if (!name) throw new CollectionError('Donne un nom au classeur.');
-	if (name.length > BINDER_NAME_MAX) throw new CollectionError(`${BINDER_NAME_MAX} caractères maximum.`);
+	if (!name) throw new CollectionError('Donne un nom au profil.');
+	if (name.length > PROFILE_NAME_MAX) throw new CollectionError(`${PROFILE_NAME_MAX} caractères maximum.`);
 	return name;
 }
 
@@ -65,40 +67,75 @@ function weightedAverage(
 	return total.div(count).toDecimalPlaces(4);
 }
 
-// --- Binders ---
+// --- Profiles ---
 
-export async function listBinders(ownerSub: string): Promise<BinderSummaryVM[]> {
-	return (await binderRepository.listByOwner(ownerSub)).map(toBinderSummaryVM);
+export async function listProfiles(ownerSub: string): Promise<ProfileSummaryVM[]> {
+	return (await profileRepository.listByOwner(ownerSub)).map(toProfileSummaryVM);
 }
 
-/** My binders and the value of the whole collection (D23). */
-export async function getCollectionOverview(ownerSub: string): Promise<CollectionOverviewVM> {
-	const binders = await listBinders(ownerSub);
+/** Every profile of the account and the value of the whole family (D31). */
+export async function getAccountOverview(ownerSub: string): Promise<AccountOverviewVM> {
+	const profiles = await listProfiles(ownerSub);
 	return {
-		totalValue: roundCents(binders.reduce((sum, binder) => sum + binder.value, 0)),
-		unpricedCount: binders.reduce((sum, binder) => sum + binder.unpricedCount, 0),
-		binders
+		totalValue: roundCents(profiles.reduce((sum, profile) => sum + profile.value, 0)),
+		unpricedCount: profiles.reduce((sum, profile) => sum + profile.unpricedCount, 0),
+		profiles
 	};
 }
 
-export async function getBinder(id: string, ownerSub: string): Promise<BinderDetailVM | null> {
-	const binder = await binderRepository.findOwned(id, ownerSub);
-	if (!binder) return null;
-	const items = binder.items.map(toCollectionItemVM);
+/** The sets a profile has cards of, with their completion for this profile (D16, D19, D30). */
+function setsOf(items: CollectionItemVM[], rawItems: profileRepository.ProfileWithItems['items']): ProfileSetVM[] {
+	const bySet = new Map<string, { set: (typeof rawItems)[number]['card']['set']; items: CollectionItemVM[] }>();
+	items.forEach((item, index) => {
+		const set = rawItems[index].card.set;
+		const group = bySet.get(set.id) ?? { set, items: [] };
+		group.items.push(item);
+		bySet.set(set.id, group);
+	});
+
+	return [...bySet.values()]
+		.map(({ set, items: setItems }) => {
+			// A card counts once whatever its lots (variants, conditions, languages).
+			const distinct = new Map(setItems.map((item) => [item.card.id, item.card.localId]));
+			const official = [...distinct.values()].filter((localId) => isOfficialNumber(localId, set.officialCount)).length;
+			const { value } = valueOf(setItems.map((item) => ({ quantity: item.quantity, unitPrice: item.currentMarketPrice })));
+			return {
+				id: set.id,
+				name: set.name,
+				logoUrl: set.logoUrl,
+				officialCount: set.officialCount,
+				ownedOfficial: official,
+				ownedSecret: distinct.size - official,
+				secretCount: Math.max(0, set.totalCount - set.officialCount),
+				percent: set.officialCount > 0 ? Math.round((official / set.officialCount) * 100) : 0,
+				cardCount: setItems.reduce((sum, item) => sum + item.quantity, 0),
+				value
+			};
+		})
+		.sort((a, b) => b.percent - a.percent || a.name.localeCompare(b.name, 'fr'));
+}
+
+export async function getProfile(id: string, ownerSub: string): Promise<ProfileDetailVM | null> {
+	const profile = await profileRepository.findOwned(id, ownerSub);
+	if (!profile) return null;
+	const items = profile.items.map(toCollectionItemVM);
 	return {
-		id: binder.id,
-		name: binder.name,
+		id: profile.id,
+		name: profile.name,
+		lotCount: items.length,
+		cardCount: items.reduce((sum, item) => sum + item.quantity, 0),
 		...valueOf(items.map((item) => ({ quantity: item.quantity, unitPrice: item.currentMarketPrice }))),
-		items
+		sets: setsOf(items, profile.items)
 	};
 }
 
-export const createBinder = (ownerSub: string, rawName: string) => binderRepository.create(ownerSub, binderName(rawName));
+export const createProfile = (ownerSub: string, rawName: string) =>
+	profileRepository.create(ownerSub, profileName(rawName));
 
-export const renameBinder = async (id: string, ownerSub: string, rawName: string) =>
-	(await binderRepository.rename(id, ownerSub, binderName(rawName))) > 0;
+export const renameProfile = async (id: string, ownerSub: string, rawName: string) =>
+	(await profileRepository.rename(id, ownerSub, profileName(rawName))) > 0;
 
-export const deleteBinder = async (id: string, ownerSub: string) => (await binderRepository.remove(id, ownerSub)) > 0;
+export const deleteProfile = async (id: string, ownerSub: string) => (await profileRepository.remove(id, ownerSub)) > 0;
 
 // --- Lots ---
 
@@ -107,8 +144,8 @@ export async function getLot(id: string, ownerSub: string): Promise<CollectionIt
 	return item && toCollectionItemVM(item);
 }
 
-export type AddToBinderInput = {
-	binderId: string;
+export type AddToProfileInput = {
+	profileId: string;
 	cardId: string;
 	variant: string;
 	condition: string;
@@ -118,14 +155,14 @@ export type AddToBinderInput = {
 };
 
 /**
- * Add copies of a card to a binder. Null: binder or card not found. `merged`: the copies joined an
- * identical lot (same binder, card, variant, condition, language).
+ * Add copies of a card to a profile. Null: profile or card not found. `merged`: the copies joined
+ * an identical lot (same profile, card, variant, condition, language).
  */
-export async function addToBinder(
+export async function addToProfile(
 	ownerSub: string,
-	input: AddToBinderInput
+	input: AddToProfileInput
 ): Promise<{ itemId: string; merged: boolean } | null> {
-	if (!(await binderRepository.existsOwned(input.binderId, ownerSub))) return null;
+	if (!(await profileRepository.existsOwned(input.profileId, ownerSub))) return null;
 	// Refreshes the card if needed: the frozen price is today's market price.
 	const card = await getCardDetail(input.cardId);
 	if (!card) return null;
@@ -134,7 +171,7 @@ export async function addToBinder(
 	if (card.variants.length > 0 && !card.variants.includes(variant))
 		throw new CollectionError("Cette variante n'existe pas pour cette carte.");
 	const key: itemRepository.LotKey = {
-		binderId: input.binderId,
+		profileId: input.profileId,
 		cardId: card.id,
 		variant,
 		condition: oneOf<CardCondition>(CARD_CONDITIONS, input.condition, 'Choisis un état.'),

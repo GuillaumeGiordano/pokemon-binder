@@ -6,7 +6,7 @@ import { env } from '$env/dynamic/private';
 // no secret, only who is signed in; it cannot be forged without SESSION_SECRET.
 
 export type SessionUser = {
-	/** G2 Hub `sub`: every binder belongs to it. */
+	/** G2 Hub `sub`: every profile belongs to it. */
 	sub: string;
 	name: string;
 	email: string;

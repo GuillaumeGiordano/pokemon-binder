@@ -57,6 +57,9 @@ Application web permettant de :
 | D27 | 2026-10-30 | Prix moyens stockés avec **4 décimales** (`Decimal(12, 4)`), arrondis à l'affichage | Une moyenne arrondie au centime dérivait une fois remultipliée (−1,83 € au lieu de −1,82 €) |
 | D28 | 2026-10-30 | Suppression d'un lot / d'un classeur confirmée dans une **popin** (`Modal`) | La confirmation en ligne s'affichait hors écran |
 | D29 | 2026-10-30 | **Vue d'une extension** : toutes ses cartes, possédées (×quantité) ou **manquantes (grisées)**, filtre Toutes / Possédées / Manquantes ; cartes secrètes à part | Voir d'un coup d'œil ce qui manque pour compléter une extension |
+| D30 | 2026-10-30 | **Profils** : un compte (G2 Hub) contient des **profils** (ex. « Charlie », « Papa »), **un profil = une collection**, sans sous-classeurs. **Révise D15** (classeurs de rangement) et **D18** (la complétion se calcule **par profil**, plus sur tout le compte) | Collection familiale : chaque personne suit ses propres cartes |
+| D31 | 2026-10-30 | **Accueil du compte** : valeur totale de la famille + valeur de chaque profil ; un clic entre dans un profil (pas d'écran « Qui collectionne ? ») | Vue d'ensemble conservée, un clic pour entrer |
+| D32 | 2026-10-30 | Dans la vue d'une extension, une carte possédée en **plusieurs lots** (ex. Normale + Reverse) s'affiche une fois ; le clic ouvre une **popin listant ses lots** | Accéder à chaque lot sans dupliquer la carte dans la grille |
 
 ---
 
@@ -83,16 +86,18 @@ _Aucune pour l'instant — toutes les questions de la V1 sont tranchées._
 
 ---
 
-## 5 bis. Écrans V1 (validés le 2026-10-30)
+## 5 bis. Écrans V1 (validés le 2026-10-30, révisés le 2026-10-30 avec les profils D30)
 
 | Route | Rôle |
 |---|---|
-| `/` | Accueil : **valeur totale** + liste de mes classeurs (valeur de chacun) |
-| `/classeurs/[id]` | **Grille** des lots d'un classeur : image, quantité, état, cote actuelle, évolution |
-| `/recherche` | Recherche par nom / numéro → « Ajouter au classeur » (classeur, variante, état, langue, quantité, prix payé) |
+| `/` | Accueil du compte : **valeur de la famille** + profils (valeur de chacun), création d'un profil (D31) |
+| `/profils/[id]` | Un profil : sa valeur, ses **extensions** (complétion, valeur) ; renommer, supprimer |
+| `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **popin de ses lots** (D32), manquante → fiche carte |
+| `/recherche` | Recherche par nom / numéro (`?profil=` conservé depuis un profil) |
+| `/cartes/[id]` | Fiche carte → « Ajouter à un profil » (profil présélectionné via `?profil=`) |
 | `/lots/[id]` | Détail d'un lot : prix payé / cote figée / cote actuelle ; modifier, supprimer |
-| `/extensions` | **Complétion** par extension (« 120/198 (+12 secrètes) ») |
-| `/extensions/[id]` | Toutes les cartes d'une extension, possédées / manquantes, avec filtre (D29) |
+
+_Remplacés par les profils (D30) : `/classeurs/[id]`, `/extensions`, `/extensions/[id]`._
 
 ## 5 ter. Ordre de construction (validé le 2026-10-30)
 

@@ -1,6 +1,6 @@
 // Pokémon Binder — data model (CONCEPTION.md §6)
 // Two parts: a local cache of TCGdex shared by every user (CardSet, Card, PriceSnapshot)
-// and each user's collection (Binder, CollectionItem), scoped by the G2 Hub `sub`.
+// and each account's collections (Profile, CollectionItem), scoped by the G2 Hub `sub`.
 
 generator client {
   provider = "prisma-client"
@@ -93,24 +93,27 @@ model PriceSnapshot {
   @@unique([cardId, date])
 }
 
-// --- Collection: one per user ---
+// --- Collections: one per profile ---
 
-model Binder {
+/// A profile of an account (D30): one person of the family, with their own collection.
+/// Table and columns keep their former "Binder" names (@@map / @map): no data migration.
+model Profile {
   id        String           @id @default(uuid())
-  /// G2 Hub `sub` of the owner (D6) — no User table.
+  /// G2 Hub `sub` of the account (D6) — no User table.
   ownerSub  String
   name      String
   createdAt DateTime         @default(now())
   items     CollectionItem[]
 
   @@index([ownerSub])
+  @@map("Binder")
 }
 
 /// A lot of identical copies (D11). Adding an identical copy merges into it (D20).
 model CollectionItem {
   id                     String        @id @default(uuid())
-  binderId               String
-  binder                 Binder        @relation(fields: [binderId], references: [id], onDelete: Cascade)
+  profileId              String        @map("binderId")
+  profile                Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
   cardId                 String
   card                   Card          @relation(fields: [cardId], references: [id])
   variant                CardVariant
@@ -125,6 +128,6 @@ model CollectionItem {
   /// First acquisition (D20).
   acquiredAt             DateTime      @default(now())
 
-  @@unique([binderId, cardId, variant, condition, language])
+  @@unique([profileId, cardId, variant, condition, language])
   @@index([cardId])
 }

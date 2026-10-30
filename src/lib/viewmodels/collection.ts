@@ -1,8 +1,9 @@
 import type { CardVariant } from '$lib/records/card';
 import type { CardCondition, CardLanguage } from '$lib/records/collection';
+import type { SetCompletionVM } from '$lib/viewmodels/completion';
 
-/** A binder in the list of my binders. */
-export type BinderSummaryVM = {
+/** A profile in the account's list (D30). */
+export type ProfileSummaryVM = {
 	id: string;
 	name: string;
 	/** Number of lots. */
@@ -15,11 +16,23 @@ export type BinderSummaryVM = {
 	unpricedCount: number;
 };
 
-/** The home page: all my binders and the value of the whole collection (D23). */
-export type CollectionOverviewVM = {
+/** The account's home page: every profile and the value of the whole family (D31). */
+export type AccountOverviewVM = {
 	totalValue: number;
 	unpricedCount: number;
-	binders: BinderSummaryVM[];
+	profiles: ProfileSummaryVM[];
+};
+
+/** A set a profile has cards of, with its completion for that profile (D30). */
+export type ProfileSetVM = SetCompletionVM & {
+	/** Copies of this set's cards in the profile. */
+	cardCount: number;
+	value: number;
+};
+
+/** A profile's page: its value and the sets it has cards of. */
+export type ProfileDetailVM = ProfileSummaryVM & {
+	sets: ProfileSetVM[];
 };
 
 /** A lot (D11): identical copies of a card. Amounts in EUR, per card. */
@@ -30,11 +43,12 @@ export type CollectionItemVM = {
 		name: string;
 		localId: string;
 		imageUrl: string | null;
+		setId: string;
 		setName: string;
 		setLogoUrl: string | null;
 		officialCount: number;
 	};
-	binder: { id: string; name: string };
+	profile: { id: string; name: string };
 	variant: CardVariant;
 	condition: CardCondition;
 	language: CardLanguage;
@@ -47,13 +61,4 @@ export type CollectionItemVM = {
 	currentMarketPrice: number | null;
 	/** "YYYY-MM-DD", first acquisition (D20). */
 	acquiredAt: string;
-};
-
-export type BinderDetailVM = {
-	id: string;
-	name: string;
-	/** Current market value in EUR (D23), cards without a price excluded. */
-	value: number;
-	unpricedCount: number;
-	items: CollectionItemVM[];
 };

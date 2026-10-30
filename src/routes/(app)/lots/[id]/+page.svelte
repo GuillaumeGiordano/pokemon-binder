@@ -29,7 +29,9 @@
 	<title>{lot.card.name} · Pokémon Binder</title>
 </svelte:head>
 
-<Button href="/classeurs/{lot.binder.id}" variant="ghost" icon={ArrowLeft}>{lot.binder.name}</Button>
+<Button href="/profils/{lot.profile.id}/extensions/{lot.card.setId}" variant="ghost" icon={ArrowLeft}>
+	{lot.profile.name} · {lot.card.setName}
+</Button>
 
 <div class="mt-4 flex flex-col gap-6 md:flex-row">
 	<a href="/cartes/{lot.card.id}" class="mx-auto w-full max-w-xs md:mx-0">
@@ -133,8 +135,8 @@
 
 <Modal id={DELETE_MODAL_ID} title="Supprimer ce lot ?" size="sm">
 	<p class="mb-4">
-		<strong>{lot.quantity} × {lot.card.name}</strong> ({lot.card.localId}/{lot.card.officialCount}) sera retiré du classeur
-		« {lot.binder.name} ». Cette action est <strong>irréversible</strong>.
+		<strong>{lot.quantity} × {lot.card.name}</strong> ({lot.card.localId}/{lot.card.officialCount}) sera retiré du profil
+		« {lot.profile.name} ». Cette action est <strong>irréversible</strong>.
 	</p>
 	<form
 		method="POST"

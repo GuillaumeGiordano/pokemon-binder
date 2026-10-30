@@ -21,7 +21,7 @@
 	);
 	const conditionOptions = CARD_CONDITIONS.map((c) => ({ value: c, label: `${c} — ${CARD_CONDITION_LABELS[c]}` }));
 	const languageOptions = CARD_LANGUAGES.map((l) => ({ value: l, label: CARD_LANGUAGE_LABELS[l] }));
-	const binderOptions = $derived(data.binders.map((b) => ({ value: b.id, label: b.name })));
+	const profileOptions = $derived(data.profiles.map((p) => ({ value: p.id, label: p.name })));
 
 	let quantity = $state(1);
 </script>
@@ -78,10 +78,10 @@
 		</section>
 
 		<section class="flex flex-col gap-3 rounded-lg border p-4">
-			<h2 class="font-semibold">Ajouter à un classeur</h2>
-			{#if data.binders.length === 0}
-				<p class="opacity-70">Tu n'as pas encore de classeur.</p>
-				<Button href="/" variant="secondary">Créer un classeur</Button>
+			<h2 class="font-semibold">Ajouter à un profil</h2>
+			{#if data.profiles.length === 0}
+				<p class="opacity-70">Tu n'as pas encore de profil.</p>
+				<Button href="/" variant="secondary">Créer un profil</Button>
 			{:else}
 				<form
 					method="POST"
@@ -90,11 +90,17 @@
 					use:enhance={() =>
 						async ({ result, update }) => {
 							if (result.type === 'success')
-								toast.success(result.data?.merged ? 'Ajouté au lot existant.' : 'Ajouté au classeur.');
+								toast.success(result.data?.merged ? 'Ajouté au lot existant.' : 'Ajouté au profil.');
 							await update({ reset: false });
 						}}
 				>
-					<Select name="binderId" label="Classeur" options={binderOptions} value={data.binders[0].id} required />
+					<Select
+						name="profileId"
+						label="Profil"
+						options={profileOptions}
+						value={data.selectedProfileId ?? undefined}
+						required
+					/>
 					<Select name="variant" label="Variante" options={variantOptions} value={variantOptions[0].value} required />
 					<Select name="condition" label="État" options={conditionOptions} value="NM" required />
 					<Select name="language" label="Langue" options={languageOptions} value="FR" required />
