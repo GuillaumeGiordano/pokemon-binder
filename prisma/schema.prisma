@@ -67,7 +67,7 @@ model Card {
   name         String
   imageUrl     String?
   rarity       String?
-  /// Variants that exist for this card.
+  /// Variants TCGdex declares for this card: incomplete, a hint only — any variant can be added (D35).
   variants     CardVariant[]
   cardmarketId Int?
   /// Last refresh from TCGdex.

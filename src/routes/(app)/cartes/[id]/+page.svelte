@@ -15,10 +15,15 @@
 	let { data, form } = $props();
 
 	const card = $derived(data.card);
-	// Unknown variants (TCGdex gave none): every variant can be picked.
-	const variantOptions = $derived(
-		(card.variants.length > 0 ? card.variants : CARD_VARIANTS).map((v) => ({ value: v, label: CARD_VARIANT_LABELS[v] }))
-	);
+	// Every variant can be picked (D35): TCGdex's list is incomplete, the card in hand is the proof.
+	// The ones TCGdex knows come first (the first one is preselected), the others are flagged.
+	const variantOptions = $derived([
+		...card.variants.map((v) => ({ value: v, label: CARD_VARIANT_LABELS[v] })),
+		...CARD_VARIANTS.filter((v) => !card.variants.includes(v)).map((v) => ({
+			value: v,
+			label: `${CARD_VARIANT_LABELS[v]} (non répertoriée)`
+		}))
+	]);
 	const conditionOptions = CARD_CONDITIONS.map((c) => ({ value: c, label: `${c} — ${CARD_CONDITION_LABELS[c]}` }));
 	const languageOptions = CARD_LANGUAGES.map((l) => ({ value: l, label: CARD_LANGUAGE_LABELS[l] }));
 	const profileOptions = $derived(data.profiles.map((p) => ({ value: p.id, label: p.name })));

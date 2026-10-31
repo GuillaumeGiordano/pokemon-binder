@@ -167,9 +167,8 @@ export async function addToProfile(
 	const card = await getCardDetail(input.cardId);
 	if (!card) return null;
 
+	// Any variant is accepted (D35): TCGdex's variant list is incomplete, so it cannot be a constraint.
 	const variant = oneOf<CardVariant>(CARD_VARIANTS, input.variant, 'Choisis une variante.');
-	if (card.variants.length > 0 && !card.variants.includes(variant))
-		throw new CollectionError("Cette variante n'existe pas pour cette carte.");
 	const key: itemRepository.LotKey = {
 		profileId: input.profileId,
 		cardId: card.id,
