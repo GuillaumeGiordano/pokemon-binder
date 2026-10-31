@@ -14,3 +14,18 @@ body {
 	/* An element wider than the viewport must never widen the page on mobile. */
 	overflow-x: clip;
 }
+
+/*
+ * iOS zooms into any form field whose text is under 16px as soon as it is touched, and the page
+ * stays zoomed: it then looks wider than the screen, cut on the right. The @guillaumeg/ui fields
+ * (Input, Select, NumberInput, Textarea) use 14px. On touch screens, bring them to 16px.
+ * !important: their size comes from component-scoped styles (.input.svelte-xxxx), more specific
+ * than a global rule. To remove once the library itself uses 16px on mobile.
+ */
+@media (pointer: coarse) {
+	input,
+	select,
+	textarea {
+		font-size: 16px !important;
+	}
+}
