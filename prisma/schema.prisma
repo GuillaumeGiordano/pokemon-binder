@@ -53,6 +53,9 @@ model CardSet {
   officialCount Int
   /// Including secret cards, e.g. 258.
   totalCount    Int
+  /// Every card of the set was last fetched with its price at this date (D41): until then, the
+  /// value of the complete set is « being computed ». Null: never done.
+  catalogSyncedAt DateTime?
   cards         Card[]
 }
 

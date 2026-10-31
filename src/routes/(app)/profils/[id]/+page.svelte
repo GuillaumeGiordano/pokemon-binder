@@ -129,7 +129,11 @@
 									? 's'
 									: ''}{set.secretCount > 0 ? ` sur ${set.secretCount}` : ''}){/if}
 						</span>
-						<span>{formatEur(set.value)}</span>
+						<!-- My cards (duplicates included) / the complete set, secret cards included (D41). -->
+						<span title="Mes cartes / extension complète">
+							<strong>{formatEur(set.value)}</strong>
+							/ {set.completeValue === null ? 'calcul en cours…' : formatEur(set.completeValue)}
+						</span>
 					</p>
 					</div>
 					</Card>

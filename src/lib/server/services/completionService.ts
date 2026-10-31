@@ -13,7 +13,8 @@ import type { SetCardLotVM, SetCardVM, SetDetailVM } from '$lib/viewmodels/compl
 const SET_CACHE_TTL_MS = 24 * 3600 * 1000;
 const setCache = new Map<string, { at: number; set: TcgdexSet }>();
 
-async function fetchSet(id: string): Promise<TcgdexSet | null> {
+/** A set with all its cards, from TCGdex (kept 24 h in memory). Null: unknown set. */
+export async function fetchSet(id: string): Promise<TcgdexSet | null> {
 	const cached = setCache.get(id);
 	if (cached && Date.now() - cached.at < SET_CACHE_TTL_MS) return cached.set;
 	const set = await tcgdex.getSet(id);

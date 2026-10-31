@@ -49,6 +49,45 @@ export const findOwnedCardIdsSyncedBefore = async (since: Date) =>
 		})
 	).map((card) => card.id);
 
+/** Sets with at least one card in a profile whose full catalog is missing or older than `since` (D41). */
+export const findOwnedSetIdsToCatalog = async (since: Date) =>
+	(
+		await prisma.cardSet.findMany({
+			where: {
+				cards: { some: { items: { some: {} } } },
+				OR: [{ catalogSyncedAt: null }, { catalogSyncedAt: { lt: since } }]
+			},
+			select: { id: true },
+			orderBy: { catalogSyncedAt: { sort: 'asc', nulls: 'first' } }
+		})
+	).map((set) => set.id);
+
+/** When each cached card of a set was last refreshed (absent: never fetched). */
+export const findSyncDatesOfSet = async (setId: string) =>
+	new Map(
+		(await prisma.card.findMany({ where: { setId }, select: { id: true, syncedAt: true } })).map((card) => [
+			card.id,
+			card.syncedAt
+		])
+	);
+
+export const markCatalogSynced = (setId: string) =>
+	prisma.cardSet.update({ where: { id: setId }, data: { catalogSyncedAt: new Date() } });
+
+/**
+ * Value of complete sets (D41): the latest `trend` of every cached card of these sets, one copy
+ * each, secret cards included. Only meaningful once the set's catalog is synced.
+ */
+export const findSetCatalogs = (setIds: string[]) =>
+	prisma.cardSet.findMany({
+		where: { id: { in: setIds } },
+		select: {
+			id: true,
+			catalogSyncedAt: true,
+			cards: { select: { prices: { orderBy: { date: 'desc' }, take: 1, select: { trend: true } } } }
+		}
+	});
+
 /** Save a card fetched from TCGdex, with its set and today's price, in one transaction. */
 export async function saveCard(set: SetData, card: CardData, price: PriceData | null, day: Date) {
 	await prisma.$transaction([

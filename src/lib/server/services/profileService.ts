@@ -1,7 +1,9 @@
 import * as profileRepository from '$lib/server/repositories/profileRepository';
 import * as itemRepository from '$lib/server/repositories/collectionItemRepository';
 import { toCollectionItemVM, toProfileSummaryVM } from '$lib/server/mappers/collectionMapper';
+import * as cardRepository from '$lib/server/repositories/cardRepository';
 import { getCardDetail } from '$lib/server/services/cardService';
+import { kickSetCatalogs } from '$lib/server/services/priceJobService';
 import { Prisma } from '$lib/server/prisma/client';
 import { CARD_VARIANTS, type CardVariant } from '$lib/records/card';
 import { CARD_CONDITIONS, CARD_LANGUAGES, type CardCondition, type CardLanguage } from '$lib/records/collection';
@@ -85,7 +87,27 @@ export async function getAccountOverview(ownerSub: string): Promise<AccountOverv
 }
 
 /** The sets a profile has cards of, with their completion for this profile (D16, D19, D30). */
-function setsOf(items: CollectionItemVM[], rawItems: profileRepository.ProfileWithItems['items']): ProfileSetVM[] {
+/**
+ * Value of each complete set (D41): one copy of every card, secret cards included, at its latest
+ * `trend`. Null while the set's catalog has not been fetched yet (« being computed »).
+ */
+async function completeSetValues(setIds: string[]): Promise<Map<string, number | null>> {
+	const catalogs = await cardRepository.findSetCatalogs(setIds);
+	return new Map(
+		catalogs.map((set) => [
+			set.id,
+			set.catalogSyncedAt
+				? roundCents(set.cards.reduce((sum, card) => sum + (card.prices[0]?.trend?.toNumber() ?? 0), 0))
+				: null
+		])
+	);
+}
+
+function setsOf(
+	items: CollectionItemVM[],
+	rawItems: profileRepository.ProfileWithItems['items'],
+	completeValues: Map<string, number | null>
+): ProfileSetVM[] {
 	const bySet = new Map<string, { set: (typeof rawItems)[number]['card']['set']; items: CollectionItemVM[] }>();
 	items.forEach((item, index) => {
 		const set = rawItems[index].card.set;
@@ -110,7 +132,8 @@ function setsOf(items: CollectionItemVM[], rawItems: profileRepository.ProfileWi
 				secretCount: Math.max(0, set.totalCount - set.officialCount),
 				percent: set.officialCount > 0 ? Math.round((official / set.officialCount) * 100) : 0,
 				cardCount: setItems.reduce((sum, item) => sum + item.quantity, 0),
-				value
+				value,
+				completeValue: completeValues.get(set.id) ?? null
 			};
 		})
 		.sort((a, b) => b.percent - a.percent || a.name.localeCompare(b.name, 'fr'));
@@ -120,13 +143,14 @@ export async function getProfile(id: string, ownerSub: string): Promise<ProfileD
 	const profile = await profileRepository.findOwned(id, ownerSub);
 	if (!profile) return null;
 	const items = profile.items.map(toCollectionItemVM);
+	const completeValues = await completeSetValues([...new Set(items.map((item) => item.card.setId))]);
 	return {
 		id: profile.id,
 		name: profile.name,
 		lotCount: items.length,
 		cardCount: items.reduce((sum, item) => sum + item.quantity, 0),
 		...valueOf(items.map((item) => ({ quantity: item.quantity, unitPrice: item.currentMarketPrice }))),
-		sets: setsOf(items, profile.items),
+		sets: setsOf(items, profile.items, completeValues),
 		items
 	};
 }
@@ -221,6 +245,8 @@ export async function addToProfile(
 					purchaseUnitPrice: paidDecimal,
 					acquisitionMarketPrice: marketDecimal
 				});
+				// A new lot may be the first card of a set: fetch that set's catalog now (D41).
+				kickSetCatalogs();
 				return { itemId: item.id, merged: false };
 			}
 			if (existing.quantity + added > QUANTITY_MAX)

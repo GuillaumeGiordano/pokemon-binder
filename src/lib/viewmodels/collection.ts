@@ -27,7 +27,10 @@ export type AccountOverviewVM = {
 export type ProfileSetVM = SetCompletionVM & {
 	/** Copies of this set's cards in the profile. */
 	cardCount: number;
+	/** Value of the profile's cards of this set, duplicates included (D41). */
 	value: number;
+	/** Value of the complete set, one of each card, secret cards included; null: being computed (D41). */
+	completeValue: number | null;
 };
 
 /** A profile's page: its value, the sets it has cards of, and every lot (« Mes cartes » tab, D40). */
