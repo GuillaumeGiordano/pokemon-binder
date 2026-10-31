@@ -35,6 +35,12 @@ export type ProfileDetailVM = ProfileSummaryVM & {
 	sets: ProfileSetVM[];
 };
 
+/** How many copies of a card the account already owns, in total and per profile (D39). */
+export type OwnedCardVM = {
+	total: number;
+	byProfile: { name: string; quantity: number }[];
+};
+
 /** A lot (D11): identical copies of a card. Amounts in EUR, per card. */
 export type CollectionItemVM = {
 	id: string;

@@ -25,6 +25,13 @@ export const findOwnedInSet = (profileId: string, ownerSub: string, setId: strin
 		orderBy: [{ cardId: 'asc' }, { variant: 'asc' }]
 	});
 
+/** Quantity and profile of the account's lots of these cards (search results: « already owned »). */
+export const findOwnedQuantities = (cardIds: string[], ownerSub: string) =>
+	prisma.collectionItem.findMany({
+		where: { cardId: { in: cardIds }, profile: { ownerSub } },
+		select: { cardId: true, quantity: true, profile: { select: { id: true, name: true, createdAt: true } } }
+	});
+
 /** The lot with exactly this key (D20: at most one, enforced by a unique constraint). */
 export const findByKey = (key: LotKey) =>
 	prisma.collectionItem.findUnique({ where: { profileId_cardId_variant_condition_language: key } });

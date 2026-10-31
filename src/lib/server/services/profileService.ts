@@ -10,6 +10,7 @@ import { parseEuroInput, referencePrice, roundCents, valueOf } from '$lib/utils/
 import type {
 	AccountOverviewVM,
 	CollectionItemVM,
+	OwnedCardVM,
 	ProfileDetailVM,
 	ProfileSetVM,
 	ProfileSummaryVM
@@ -138,6 +139,31 @@ export const renameProfile = async (id: string, ownerSub: string, rawName: strin
 export const deleteProfile = async (id: string, ownerSub: string) => (await profileRepository.remove(id, ownerSub)) > 0;
 
 // --- Lots ---
+
+/** The cards among `cardIds` the account already owns (D39), keyed by card id; others are absent. */
+export async function getOwnedCards(cardIds: string[], ownerSub: string): Promise<Record<string, OwnedCardVM>> {
+	if (cardIds.length === 0) return {};
+	const rows = await itemRepository.findOwnedQuantities(cardIds, ownerSub);
+	// Profiles in creation order, like on the home page.
+	rows.sort((a, b) => a.profile.createdAt.getTime() - b.profile.createdAt.getTime());
+
+	// Per card, per profile id (two profiles may share a name): the lots of a card add up.
+	const byCard = new Map<string, Map<string, { name: string; quantity: number }>>();
+	for (const row of rows) {
+		const profiles = byCard.get(row.cardId) ?? new Map<string, { name: string; quantity: number }>();
+		const entry = profiles.get(row.profile.id) ?? { name: row.profile.name, quantity: 0 };
+		entry.quantity += row.quantity;
+		profiles.set(row.profile.id, entry);
+		byCard.set(row.cardId, profiles);
+	}
+
+	const owned: Record<string, OwnedCardVM> = {};
+	for (const [cardId, profiles] of byCard) {
+		const byProfile = [...profiles.values()];
+		owned[cardId] = { total: byProfile.reduce((sum, entry) => sum + entry.quantity, 0), byProfile };
+	}
+	return owned;
+}
 
 export async function getLot(id: string, ownerSub: string): Promise<CollectionItemVM | null> {
 	const item = await itemRepository.findOwned(id, ownerSub);

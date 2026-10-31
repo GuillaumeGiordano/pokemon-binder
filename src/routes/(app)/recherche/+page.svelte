@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { Alert, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
+	import { Alert, Badge, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
 	import { ChevronLeft, ChevronRight, Search, SearchX } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import ScanButton from '$lib/components/scan/ScanButton.svelte';
@@ -62,21 +62,34 @@
 	{/if}
 	<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 		{#each search.results as card (card.id)}
+			{@const owned = data.owned[card.id]}
 			<li>
 				<a href={resultHref(card.id)} class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
-					<CardImage
-						imageUrl={card.imageUrl}
-						name={card.name}
-						number={card.set ? `${card.localId}/${card.set.officialCount}` : card.localId}
-						setName={card.set?.name ?? null}
-						setLogoUrl={card.set?.logoUrl}
-						lazy
-						class="rounded-md"
-					/>
+					<div class="relative">
+						<CardImage
+							imageUrl={card.imageUrl}
+							name={card.name}
+							number={card.set ? `${card.localId}/${card.set.officialCount}` : card.localId}
+							setName={card.set?.name ?? null}
+							setLogoUrl={card.set?.logoUrl}
+							lazy
+							class="rounded-md"
+						/>
+						{#if owned}
+							<span class="absolute top-1 right-1">
+								<Badge label="✓ ×{owned.total}" variant="success" size="sm" />
+							</span>
+						{/if}
+					</div>
 					<span class="truncate text-sm font-semibold">{card.name}</span>
 					<span class="truncate text-xs opacity-70">
 						{card.localId}{card.set ? `/${card.set.officialCount} · ${card.set.name}` : ''}
 					</span>
+					{#if owned}
+						<span class="truncate text-xs font-semibold text-green-600">
+							Déjà : {owned.byProfile.map((profile) => `${profile.name} ×${profile.quantity}`).join(' · ')}
+						</span>
+					{/if}
 				</a>
 			</li>
 		{/each}
