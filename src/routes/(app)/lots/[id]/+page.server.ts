@@ -1,13 +1,25 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { CollectionError, deleteLot, getLot, updateLot } from '$lib/server/services/profileService';
 import { field } from '$lib/utils/form';
+import { profileSetHref } from '$lib/utils/searchUrl';
+import type { CollectionItemVM } from '$lib/viewmodels/collection';
 import type { Actions, PageServerLoad } from './$types';
 
+/**
+ * Where the lot page leads back (and where a deletion lands): the profile's « Mes cartes » tab when
+ * opened from it (`?retour=cartes`, D40), otherwise the profile's view of the card's set.
+ */
+function backOf(lot: CollectionItemVM, url: URL) {
+	return url.searchParams.get('retour') === 'cartes'
+		? { href: `/profils/${lot.profile.id}?onglet=cartes`, label: `${lot.profile.name} · Mes cartes`, fromCards: true }
+		: { href: profileSetHref(lot.profile.id, lot.card.setId), label: `${lot.profile.name} · ${lot.card.setName}`, fromCards: false };
+}
+
 // A lot of the signed-in user; another user's lot answers 404 (reveals nothing).
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const lot = await getLot(params.id, locals.user!.sub);
 	if (!lot) error(404, 'Lot introuvable.');
-	return { lot };
+	return { lot, back: backOf(lot, url) };
 };
 
 export const actions: Actions = {
@@ -25,10 +37,10 @@ export const actions: Actions = {
 			throw err;
 		}
 	},
-	delete: async ({ params, locals }) => {
+	delete: async ({ params, locals, url }) => {
 		const lot = await getLot(params.id, locals.user!.sub);
 		if (!lot || !(await deleteLot(params.id, locals.user!.sub))) error(404, 'Lot introuvable.');
-		// Back to the set seen by the profile, where the lot was.
-		redirect(303, `/profils/${lot.profile.id}/extensions/${lot.card.setId}`);
+		// Back where the lot was listed.
+		redirect(303, backOf(lot, url).href);
 	}
 };

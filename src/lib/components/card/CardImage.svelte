@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { ImageOff } from '@lucide/svelte';
+
 	// A card's picture, or — when TCGdex has none in any language — a placeholder that still tells
-	// which card it is: name, number and set.
+	// which card it is: name, number and set. `compact` (thumbnails): just an icon, the text around
+	// the thumbnail already names the card.
 	let {
 		imageUrl,
 		name,
@@ -8,6 +11,7 @@
 		setName,
 		setLogoUrl = null,
 		lazy = false,
+		compact = false,
 		class: cls = ''
 	}: {
 		imageUrl: string | null;
@@ -17,12 +21,21 @@
 		setName: string | null;
 		setLogoUrl?: string | null;
 		lazy?: boolean;
+		compact?: boolean;
 		class?: string;
 	} = $props();
 </script>
 
 {#if imageUrl}
 	<img src={imageUrl} alt={name} loading={lazy ? 'lazy' : undefined} class="aspect-[5/7] w-full object-cover {cls}" />
+{:else if compact}
+	<div
+		class="flex aspect-[5/7] w-full items-center justify-center border opacity-60 {cls}"
+		role="img"
+		aria-label="{name}, image indisponible"
+	>
+		<ImageOff size={16} />
+	</div>
 {:else}
 	<div
 		class="flex aspect-[5/7] w-full flex-col items-center justify-center gap-2 border p-3 text-center {cls}"

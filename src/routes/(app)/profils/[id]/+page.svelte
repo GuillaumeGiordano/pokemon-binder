@@ -1,12 +1,29 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Button, EmptyState, Input, Modal, Progress, toast } from '@guillaumeg/ui';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
+	import { Alert, Button, EmptyState, Input, Modal, Progress, Tabs, toast } from '@guillaumeg/ui';
 	import { ArrowLeft, Pencil, Search, Trash2 } from '@lucide/svelte';
+	import ProfileCardList from '$lib/components/profile/ProfileCardList.svelte';
 	import { formatEur } from '$lib/utils/format';
 
 	let { data, form } = $props();
 
 	const profile = $derived(data.profile);
+
+	// Two tabs (D40): the sets, or every card as a list. The tab lives in the URL (`?onglet=cartes`)
+	// so that coming back from a lot page lands on the same tab.
+	const TABS = [
+		{ id: 'extensions', label: 'Extensions' },
+		{ id: 'cartes', label: 'Mes cartes' }
+	];
+	const tab = $derived(page.url.searchParams.get('onglet') === 'cartes' ? 'cartes' : 'extensions');
+	function selectTab(id: string) {
+		const url = new URL(page.url);
+		if (id === 'cartes') url.searchParams.set('onglet', 'cartes');
+		else url.searchParams.delete('onglet');
+		replaceState(url, {});
+	}
 	let editing = $state(false);
 
 	const DELETE_MODAL_ID = 'profile-delete';
@@ -69,7 +86,20 @@
 		cta={{ label: 'Rechercher une carte', href: `/recherche?profil=${profile.id}` }}
 	/>
 {:else}
-	<h2 class="mb-2 font-semibold">Extensions</h2>
+	<Tabs tabs={TABS} variant="underline" bind:value={() => tab, selectTab}>
+		{#snippet children(active)}
+			<div class="mt-4">
+				{#if active === 'cartes'}
+					<ProfileCardList items={profile.items} />
+				{:else}
+					{@render setList()}
+				{/if}
+			</div>
+		{/snippet}
+	</Tabs>
+{/if}
+
+{#snippet setList()}
 	<ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
 		{#each profile.sets as set (set.id)}
 			<li>
@@ -101,7 +131,7 @@
 			</li>
 		{/each}
 	</ul>
-{/if}
+{/snippet}
 
 <Modal id={DELETE_MODAL_ID} title="Supprimer ce profil ?" size="sm">
 	<p class="mb-4">

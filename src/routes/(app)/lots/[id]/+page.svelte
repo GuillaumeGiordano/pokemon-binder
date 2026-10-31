@@ -28,9 +28,7 @@
 	<title>{lot.card.name} · Pokémon Binder</title>
 </svelte:head>
 
-<Button href="/profils/{lot.profile.id}/extensions/{lot.card.setId}" variant="ghost" icon={ArrowLeft}>
-	{lot.profile.name} · {lot.card.setName}
-</Button>
+<Button href={data.back.href} variant="ghost" icon={ArrowLeft}>{data.back.label}</Button>
 
 <div class="mt-4 flex flex-col gap-6 md:flex-row">
 	<div class="mx-auto w-full max-w-xs md:mx-0">
@@ -139,7 +137,7 @@
 	</p>
 	<form
 		method="POST"
-		action="?/delete"
+		action={data.back.fromCards ? '?/delete&retour=cartes' : '?/delete'}
 		class="flex justify-end gap-2"
 		use:enhance={() => {
 			deleting = true;

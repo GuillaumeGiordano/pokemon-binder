@@ -126,7 +126,8 @@ export async function getProfile(id: string, ownerSub: string): Promise<ProfileD
 		lotCount: items.length,
 		cardCount: items.reduce((sum, item) => sum + item.quantity, 0),
 		...valueOf(items.map((item) => ({ quantity: item.quantity, unitPrice: item.currentMarketPrice }))),
-		sets: setsOf(items, profile.items)
+		sets: setsOf(items, profile.items),
+		items
 	};
 }
 

@@ -67,6 +67,7 @@ Application web permettant de :
 | D37 | 2026-10-31 | Dans la collection, une carte **manquante** (noir et blanc) ouvre la **fiche d'ajout** avec le **profil présélectionné** et un retour « ← profil · extension » ; après l'ajout, « Ajouter une autre carte » ramène à l'extension. **Assouplit D36** (l'ajout passe aussi par là) | Compléter une extension carte après carte sans repasser par la recherche |
 | D38 | 2026-10-31 | **Scan par viseur** (révise D33) : « Scanner » ouvre la **caméra en direct** (`getUserMedia`, HTTPS) avec un **cadre de visée** ; seul le contenu du cadre (le numéro, en gros plan) est lu. Préparation : binarisation (seuil d'Otsu) ou contraste, agrandi à 1 200 px ; **3 lectures** (binarisé + mode 11, binarisé + mode 6, contrasté + mode 11) et vote majoritaire. Repli : photo en gros plan si la caméra est indisponible | Retour d'usage : le scan de la carte entière ne marchait pas. Mesuré sur 5 gros plans : **5/5** en < 1 s ; le mode « une ligne » faisait 0/5 et la lecture inversée doublait les erreurs |
 | D39 | 2026-10-31 | Dans les **résultats de recherche**, une carte déjà possédée affiche un badge **✓ ×quantité** (tous profils) et le détail « Déjà : Charlie ×2 · Papa ×1 » ; une seule requête pour toute la page, filtrée sur le compte | Éviter d'acheter ou d'ajouter une carte en double sans le savoir |
+| D40 | 2026-10-31 | La page d'un profil a **deux onglets** : « Extensions » (la vue actuelle) et « **Mes cartes** » : tous les lots en liste simple, **triés par cote** (décroissante par défaut, ou croissante, nom, numéro, ajout récent), avec **recherche** nom / référence (sans accents, « 025/198 ») et **filtres** variante, extension, état, langue ; total affiché (cartes, valeur). Filtrage dans le navigateur (instantané) ; onglet gardé dans l'URL (`?onglet=cartes`), un lot ouvert depuis la liste y ramène | Retour d'usage : retrouver et estimer ses cartes sans passer extension par extension |
 
 ---
 
@@ -98,7 +99,7 @@ _Aucune pour l'instant — toutes les questions de la V1 sont tranchées._
 | Route | Rôle |
 |---|---|
 | `/` | Accueil du compte : **valeur de la famille** + profils (valeur de chacun), création d'un profil (D31) |
-| `/profils/[id]` | Un profil : sa valeur, ses **extensions** (complétion, valeur) ; renommer, supprimer |
+| `/profils/[id]` | Un profil : sa valeur ; onglets **Extensions** (complétion, valeur) et **Mes cartes** (liste triable et filtrable, D40) ; renommer, supprimer |
 | `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **sa page de lot** (popin de choix si plusieurs versions, D36), manquante → **fiche d'ajout** pour ce profil (D37) |
 | `/recherche` | Recherche par nom / numéro (`?profil=` conservé depuis un profil) |
 | `/cartes/[id]` | Fiche carte → « Ajouter à un profil » (profil présélectionné via `?profil=`) |

@@ -30,9 +30,10 @@ export type ProfileSetVM = SetCompletionVM & {
 	value: number;
 };
 
-/** A profile's page: its value and the sets it has cards of. */
+/** A profile's page: its value, the sets it has cards of, and every lot (« Mes cartes » tab, D40). */
 export type ProfileDetailVM = ProfileSummaryVM & {
 	sets: ProfileSetVM[];
+	items: CollectionItemVM[];
 };
 
 /** How many copies of a card the account already owns, in total and per profile (D39). */
