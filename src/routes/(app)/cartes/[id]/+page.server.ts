@@ -20,19 +20,26 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
 		// Only the card's own set, in one of the account's profiles: never an arbitrary URL.
 		const fromSet = requested && url.searchParams.get('extension') === card.set.id;
-		const back = fromSet
-			? { href: profileSetHref(requested.id, card.set.id), label: `${requested.name} · ${card.set.name}` }
+		const setHref = fromSet ? profileSetHref(requested.id, card.set.id) : null;
+		/** Breadcrumb trail back where the card page was opened from (Breadcrumb of the UI library). */
+		const crumbs = fromSet
+			? [
+					{ label: 'Profils', href: '/' },
+					{ label: requested.name, href: `/profils/${requested.id}` },
+					{ label: card.set.name, href: setHref! },
+					{ label: card.name }
+				]
 			: q
-				? { href: searchBack, label: `Résultats « ${q} »` }
+				? [{ label: `Recherche « ${q} »`, href: searchBack }, { label: card.name }]
 				: null;
 
 		return {
 			card,
 			profiles: profiles.map(({ id, name }) => ({ id, name })),
 			selectedProfileId: requested?.id ?? profiles[0]?.id ?? null,
-			back,
+			crumbs,
 			/** After an add: back where the user came from, or a new search for the same profile. */
-			nextCardHref: back?.href ?? searchBack
+			nextCardHref: setHref ?? searchBack
 		};
 	} catch (err) {
 		if (err instanceof TcgdexError) error(503, 'TCGdex indisponible : réessaie dans quelques minutes.');

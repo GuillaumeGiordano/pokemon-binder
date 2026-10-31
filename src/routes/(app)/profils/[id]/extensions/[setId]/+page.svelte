@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Badge, Button, EmptyState, Modal, Progress } from '@guillaumeg/ui';
-	import { ArrowLeft, ChevronRight, PartyPopper } from '@lucide/svelte';
+	import { Badge, Breadcrumb, Button, EmptyState, Modal, Progress } from '@guillaumeg/ui';
+	import { ChevronRight, PartyPopper } from '@lucide/svelte';
 	import SetCardGrid from '$lib/components/set/SetCardGrid.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
 	import { CARD_LANGUAGE_LABELS } from '$lib/records/collection';
@@ -40,7 +40,9 @@
 	<title>{set.name} · {set.profile.name} · Pokémon Binder</title>
 </svelte:head>
 
-<Button href="/profils/{set.profile.id}" variant="ghost" icon={ArrowLeft}>{set.profile.name}</Button>
+<Breadcrumb
+	items={[{ label: 'Profils', href: '/' }, { label: set.profile.name, href: `/profils/${set.profile.id}` }, { label: set.name }]}
+/>
 
 <header class="mt-4 mb-4 flex flex-col gap-2">
 	<div class="flex items-center justify-between gap-2">

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Badge, Button, Input, Modal, NumberInput, toast } from '@guillaumeg/ui';
-	import { ArrowLeft, Save, Trash2 } from '@lucide/svelte';
+	import { Alert, Badge, Breadcrumb, Button, Card, Input, Modal, NumberInput, toast } from '@guillaumeg/ui';
+	import { Save, Trash2 } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
 	import { CARD_CONDITION_LABELS, CARD_LANGUAGE_LABELS } from '$lib/records/collection';
@@ -28,7 +28,14 @@
 	<title>{lot.card.name} · Pokémon Binder</title>
 </svelte:head>
 
-<Button href={data.back.href} variant="ghost" icon={ArrowLeft}>{data.back.label}</Button>
+<Breadcrumb
+	items={[
+		{ label: 'Profils', href: '/' },
+		{ label: lot.profile.name, href: `/profils/${lot.profile.id}` },
+		data.back.fromCards ? { label: 'Mes cartes', href: data.back.href } : { label: lot.card.setName, href: data.back.href },
+		{ label: lot.card.name }
+	]}
+/>
 
 <div class="mt-4 flex flex-col gap-6 md:flex-row">
 	<div class="mx-auto w-full max-w-xs md:mx-0">
@@ -56,18 +63,18 @@
 		</div>
 
 		<section class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-			<div class="rounded-lg border p-3">
+			<Card padding="sm">
 				<p class="text-sm opacity-70">💶 Prix payé</p>
 				<p class="text-xl font-bold">{formatEur(lot.purchaseUnitPrice)}</p>
-			</div>
-			<div class="rounded-lg border p-3">
+			</Card>
+			<Card padding="sm">
 				<p class="text-sm opacity-70">📌 Cote à l'obtention</p>
 				<p class="text-xl font-bold">{formatEur(lot.acquisitionMarketPrice)}</p>
-			</div>
-			<div class="rounded-lg border p-3">
+			</Card>
+			<Card padding="sm">
 				<p class="text-sm opacity-70">📈 Cote actuelle</p>
 				<p class="text-xl font-bold">{formatEur(lot.currentMarketPrice)}</p>
-			</div>
+			</Card>
 		</section>
 
 		<section class="flex flex-col gap-1 text-sm">
@@ -97,10 +104,11 @@
 			<p class="opacity-70">Prix par carte, cote Cardmarket toutes langues et tous états confondus.</p>
 		</section>
 
+		<Card>
 		<form
 			method="POST"
 			action="?/update"
-			class="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-2"
+			class="grid grid-cols-1 gap-3 sm:grid-cols-2"
 			use:enhance={() =>
 				async ({ result, update }) => {
 					if (result.type === 'success') toast.success('Lot mis à jour.');
@@ -123,6 +131,7 @@
 				<Button variant="ghost" icon={Trash2} onclick={() => deleteModal()?.showModal()}>Supprimer</Button>
 			</div>
 		</form>
+		</Card>
 
 		{#if form?.message}
 			<Alert variant="error" dismissible={false}>{form.message}</Alert>

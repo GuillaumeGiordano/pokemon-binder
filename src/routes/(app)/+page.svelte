@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Button, EmptyState, Input, toast } from '@guillaumeg/ui';
+	import { Alert, Button, Card, EmptyState, Input, toast } from '@guillaumeg/ui';
 	import { Plus, Users } from '@lucide/svelte';
 	import { formatEur } from '$lib/utils/format';
 
@@ -13,14 +13,14 @@
 	<title>Ma famille · Pokémon Binder</title>
 </svelte:head>
 
-<section class="mb-6 rounded-lg border p-4">
+<Card class="mb-6">
 	<p class="text-sm opacity-70">Valeur de la collection familiale</p>
 	<p class="text-3xl font-bold">{formatEur(overview.totalValue)}</p>
 	{#if overview.unpricedCount > 0}
 		{@const s = overview.unpricedCount > 1 ? 's' : ''}
 		<p class="text-sm opacity-70">{overview.unpricedCount} carte{s} sans cote, non comptée{s}.</p>
 	{/if}
-</section>
+</Card>
 
 <h1 class="mb-4 text-2xl font-bold">Profils</h1>
 
@@ -30,14 +30,16 @@
 	<ul class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 		{#each overview.profiles as profile (profile.id)}
 			<li>
-				<a href="/profils/{profile.id}" class="flex flex-col gap-1 rounded-lg border p-4 hover:opacity-80">
-					<span class="flex items-baseline justify-between gap-2">
-						<span class="truncate font-semibold">{profile.name}</span>
-						<span class="font-bold">{formatEur(profile.value)}</span>
-					</span>
-					<span class="text-sm opacity-70">
-						{profile.cardCount} carte{profile.cardCount > 1 ? 's' : ''}
-					</span>
+				<a href="/profils/{profile.id}" class="block">
+					<Card hoverable>
+						<span class="flex items-baseline justify-between gap-2">
+							<span class="truncate font-semibold">{profile.name}</span>
+							<span class="font-bold">{formatEur(profile.value)}</span>
+						</span>
+						<span class="text-sm opacity-70">
+							{profile.cardCount} carte{profile.cardCount > 1 ? 's' : ''}
+						</span>
+					</Card>
 				</a>
 			</li>
 		{/each}

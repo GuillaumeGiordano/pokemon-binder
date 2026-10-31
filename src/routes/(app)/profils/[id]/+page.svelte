@@ -2,8 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Alert, Button, EmptyState, Input, Modal, Progress, Tabs, toast } from '@guillaumeg/ui';
-	import { ArrowLeft, Pencil, Search, Trash2 } from '@lucide/svelte';
+	import { Alert, Breadcrumb, Button, Card, EmptyState, Input, Modal, Progress, Tabs, toast } from '@guillaumeg/ui';
+	import { Pencil, Search, Trash2 } from '@lucide/svelte';
 	import ProfileCardList from '$lib/components/profile/ProfileCardList.svelte';
 	import { formatEur } from '$lib/utils/format';
 
@@ -11,15 +11,17 @@
 
 	const profile = $derived(data.profile);
 
-	// Two tabs (D40): the sets, or every card as a list. The tab lives in the URL (`?onglet=cartes`)
-	// so that coming back from a lot page lands on the same tab.
+	// Two tabs (D40): the sets, or every card as a list. The active tab is local state; the URL
+	// (`?onglet=cartes`) only mirrors it, so that coming back from a lot page lands on the same tab.
+	// It cannot be derived from `page.url`: replaceState (shallow routing) does not update it.
 	const TABS = [
 		{ id: 'extensions', label: 'Extensions' },
 		{ id: 'cartes', label: 'Mes cartes' }
 	];
-	const tab = $derived(page.url.searchParams.get('onglet') === 'cartes' ? 'cartes' : 'extensions');
+	let tab = $state(page.url.searchParams.get('onglet') === 'cartes' ? 'cartes' : 'extensions');
 	function selectTab(id: string) {
-		const url = new URL(page.url);
+		tab = id;
+		const url = new URL(location.href);
 		if (id === 'cartes') url.searchParams.set('onglet', 'cartes');
 		else url.searchParams.delete('onglet');
 		replaceState(url, {});
@@ -35,7 +37,7 @@
 	<title>{profile.name} · Pokémon Binder</title>
 </svelte:head>
 
-<Button href="/" variant="ghost" icon={ArrowLeft}>Profils</Button>
+<Breadcrumb items={[{ label: 'Profils', href: '/' }, { label: profile.name }]} />
 
 <div class="mt-4 mb-4 flex flex-wrap items-center justify-between gap-2">
 	{#if editing}
@@ -103,7 +105,9 @@
 	<ul class="grid grid-cols-1 gap-3 md:grid-cols-2">
 		{#each profile.sets as set (set.id)}
 			<li>
-				<a href="/profils/{profile.id}/extensions/{set.id}" class="flex flex-col gap-2 rounded-lg border p-4 hover:opacity-80">
+				<a href="/profils/{profile.id}/extensions/{set.id}" class="block">
+					<Card hoverable>
+					<div class="flex flex-col gap-2">
 					<div class="flex items-center justify-between gap-2">
 						<span class="flex min-w-0 items-center gap-2">
 							{#if set.logoUrl}
@@ -127,6 +131,8 @@
 						</span>
 						<span>{formatEur(set.value)}</span>
 					</p>
+					</div>
+					</Card>
 				</a>
 			</li>
 		{/each}

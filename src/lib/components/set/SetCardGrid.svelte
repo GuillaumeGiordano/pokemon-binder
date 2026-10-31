@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge } from '@guillaumeg/ui';
+	import { Badge, Button } from '@guillaumeg/ui';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { cardHref } from '$lib/utils/searchUrl';
 	import type { SetCardVM } from '$lib/viewmodels/completion';
@@ -53,15 +53,15 @@
 					{@render tile(card)}
 				</a>
 			{:else if card.lots.length > 1}
-				<!-- A whole card tile is the click target: no component of the UI library fits it. -->
-				<button
-					type="button"
-					class="flex w-full cursor-pointer flex-col gap-1 rounded-lg p-1 hover:opacity-80"
+				<!-- The library Button, reshaped into a card tile (column, no padding, full width). -->
+				<Button
+					variant="ghost"
+					addClass="h-auto! w-full flex-col! items-stretch! gap-1! p-1! font-normal!"
 					aria-label="{card.name} n° {card.localId}, possédée ×{card.quantity} en {card.lots.length} versions : choisir laquelle modifier"
 					onclick={() => onChooseLot(card)}
 				>
 					{@render tile(card)}
-				</button>
+				</Button>
 			{:else}
 				<a
 					href={cardHref(card.id, { profileId, setId })}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Alert, Badge, Button, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
-	import { ArrowLeft, Plus, Search } from '@lucide/svelte';
+	import { Alert, Badge, Breadcrumb, Button, Card, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
+	import { Plus, Search } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANTS, CARD_VARIANT_LABELS } from '$lib/records/card';
 	import {
@@ -35,10 +35,8 @@
 	<title>{card.name} · Pokémon Binder</title>
 </svelte:head>
 
-{#if data.back}
-	<div class="mb-4">
-		<Button href={data.back.href} variant="ghost" icon={ArrowLeft}>{data.back.label}</Button>
-	</div>
+{#if data.crumbs}
+	<div class="mb-4"><Breadcrumb items={data.crumbs} /></div>
 {/if}
 
 <div class="flex flex-col gap-6 md:flex-row">
@@ -88,7 +86,8 @@
 			{/if}
 		</section>
 
-		<section class="flex flex-col gap-3 rounded-lg border p-4">
+		<Card>
+		<section class="flex flex-col gap-3">
 			<h2 class="font-semibold">Ajouter à un profil</h2>
 			{#if data.profiles.length === 0}
 				<p class="opacity-70">Tu n'as pas encore de profil.</p>
@@ -135,5 +134,6 @@
 				{/if}
 			{/if}
 		</section>
+		</Card>
 	</div>
 </div>
