@@ -144,6 +144,11 @@ export async function getLot(id: string, ownerSub: string): Promise<CollectionIt
 	return item && toCollectionItemVM(item);
 }
 
+/** The account's lots of one card, in every profile. */
+export async function listLotsOfCard(cardId: string, ownerSub: string): Promise<CollectionItemVM[]> {
+	return (await itemRepository.findOwnedByCard(cardId, ownerSub)).map(toCollectionItemVM);
+}
+
 export type AddToProfileInput = {
 	profileId: string;
 	cardId: string;

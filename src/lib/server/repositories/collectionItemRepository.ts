@@ -25,6 +25,14 @@ export const findOwnedInSet = (profileId: string, ownerSub: string, setId: strin
 		orderBy: [{ cardId: 'asc' }, { variant: 'asc' }]
 	});
 
+/** Every lot of one card in the account's profiles (the card page lists them to edit them). */
+export const findOwnedByCard = (cardId: string, ownerSub: string) =>
+	prisma.collectionItem.findMany({
+		where: { cardId, profile: { ownerSub } },
+		include: itemInclude,
+		orderBy: [{ profile: { createdAt: 'asc' } }, { variant: 'asc' }, { condition: 'asc' }]
+	});
+
 /** The lot with exactly this key (D20: at most one, enforced by a unique constraint). */
 export const findByKey = (key: LotKey) =>
 	prisma.collectionItem.findUnique({ where: { profileId_cardId_variant_condition_language: key } });

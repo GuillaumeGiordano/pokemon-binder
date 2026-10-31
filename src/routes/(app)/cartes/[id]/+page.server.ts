@@ -1,7 +1,7 @@
 import { error, fail } from '@sveltejs/kit';
 import { TcgdexError } from '$lib/server/tcgdex';
 import { getCardDetail } from '$lib/server/services/cardService';
-import { addToProfile, CollectionError, listProfiles } from '$lib/server/services/profileService';
+import { addToProfile, CollectionError, listLotsOfCard, listProfiles } from '$lib/server/services/profileService';
 import { field } from '$lib/utils/form';
 import { profileSetHref, searchHref } from '$lib/utils/searchUrl';
 import type { Actions, PageServerLoad } from './$types';
@@ -12,7 +12,11 @@ import type { Actions, PageServerLoad } from './$types';
 // `?profil=<id>` alone preselects that profile in the add form.
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	try {
-		const [card, profiles] = await Promise.all([getCardDetail(params.id), listProfiles(locals.user!.sub)]);
+		const [card, profiles, lots] = await Promise.all([
+			getCardDetail(params.id),
+			listProfiles(locals.user!.sub),
+			listLotsOfCard(params.id, locals.user!.sub)
+		]);
 		if (!card) error(404, 'Carte introuvable.');
 		const requested = profiles.find((profile) => profile.id === url.searchParams.get('profil')) ?? null;
 		const q = url.searchParams.get('q');
@@ -28,6 +32,8 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
 		return {
 			card,
+			/** Copies already in the collection, to edit them (reloaded after each add). */
+			lots,
 			profiles: profiles.map(({ id, name }) => ({ id, name })),
 			selectedProfileId: requested?.id ?? profiles[0]?.id ?? null,
 			back,

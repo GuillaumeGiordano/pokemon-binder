@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Alert, Badge, Button, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
-	import { ArrowLeft, Plus, Search } from '@lucide/svelte';
+	import { ArrowLeft, ChevronRight, Pencil, Plus, Search } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANTS, CARD_VARIANT_LABELS } from '$lib/records/card';
 	import {
@@ -88,8 +88,40 @@
 			{/if}
 		</section>
 
+		{#if data.lots.length > 0}
+			<section class="flex flex-col gap-2 rounded-lg border p-4">
+				<h2 class="font-semibold">Dans ma collection</h2>
+				<ul class="flex flex-col gap-2">
+					{#each data.lots as lot (lot.id)}
+						<li>
+							<a
+								href="/lots/{lot.id}"
+								class="flex items-center justify-between gap-2 rounded-lg border p-3 hover:opacity-80"
+								aria-label="Modifier : {lot.quantity} × {CARD_VARIANT_LABELS[lot.variant]}, {lot.condition}, {CARD_LANGUAGE_LABELS[
+									lot.language
+								]}, profil {lot.profile.name}"
+							>
+								<span class="flex flex-wrap items-center gap-1">
+									<span class="font-semibold">{lot.profile.name}</span>
+									<Badge label="×{lot.quantity}" variant="primary" size="sm" />
+									<Badge label={CARD_VARIANT_LABELS[lot.variant]} size="sm" />
+									<Badge label={lot.condition} size="sm" />
+									<Badge label={CARD_LANGUAGE_LABELS[lot.language]} size="sm" />
+								</span>
+								<span class="flex shrink-0 items-center gap-1 text-sm">
+									<Pencil size={14} />
+									Modifier
+									<ChevronRight size={16} />
+								</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
 		<section class="flex flex-col gap-3 rounded-lg border p-4">
-			<h2 class="font-semibold">Ajouter à un profil</h2>
+			<h2 class="font-semibold">{data.lots.length > 0 ? 'Ajouter un autre exemplaire' : 'Ajouter à un profil'}</h2>
 			{#if data.profiles.length === 0}
 				<p class="opacity-70">Tu n'as pas encore de profil.</p>
 				<Button href="/" variant="secondary">Créer un profil</Button>
