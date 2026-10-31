@@ -19,7 +19,7 @@ Application web permettant de :
 | Version | Contenu | Statut |
 |---|---|---|
 | **V1** | Recherche par nom / numéro / extension + ajout au classeur + valeur | 🟢 Codée, testée en local |
-| V2 | Scan : OCR du numéro de carte (ex. `025/198`) via Tesseract.js | 🟡 Codée (D33), à tester sur téléphone |
+| V2 | Scan : OCR du numéro de carte (ex. `025/198`) via Tesseract.js | 🟡 Viseur codé (D38), à tester sur téléphone |
 | V3 | Reconnaissance visuelle (embeddings CLIP + recherche de similarité) | ⚪ Peut-être |
 
 ---
@@ -64,6 +64,8 @@ Application web permettant de :
 | D34 | 2026-10-30 | **Déploiement sur le VPS** (révise D25) : `https://pokemon.g2webdev.fr`, PM2 `pokemon-binder` port 3040 derrière Nginx, PostgreSQL du VPS, connexion via le G2 Hub de production ; procédure dans `DEPLOY.md`, mise à jour par `git pull && ./scripts/deploy.sh` | Tester en conditions réelles, notamment le scan sur téléphone (HTTPS) |
 | D35 | 2026-10-31 | **Toutes les variantes** (Normale, Reverse, Holo, 1ʳᵉ édition) sont proposées à l'ajout ; celles déclarées par TCGdex en premier, les autres marquées « (non répertoriée) ». Le serveur n'en refuse plus aucune | Les `variants` de TCGdex sont incomplètes : une variante réelle (la carte en main) était impossible à saisir |
 | D36 | 2026-10-31 | **Deux parcours distincts** : la **recherche** est le seul chemin d'**ajout** (résultat → fiche carte + formulaire d'ajout). La **collection** (vue extension d'un profil) sert à **consulter et modifier** : une carte possédée (en couleur) ouvre **directement sa page de lot** (une popin demande laquelle s'il y a plusieurs versions) ; une carte manquante (noir et blanc) n'est qu'un repère, non cliquable. **Précise D32** | Retour d'usage : la popin « lots » puis la fiche avec formulaire d'ajout brouillaient la modification d'une carte possédée |
+| D37 | 2026-10-31 | Dans la collection, une carte **manquante** (noir et blanc) ouvre la **fiche d'ajout** avec le **profil présélectionné** et un retour « ← profil · extension » ; après l'ajout, « Ajouter une autre carte » ramène à l'extension. **Assouplit D36** (l'ajout passe aussi par là) | Compléter une extension carte après carte sans repasser par la recherche |
+| D38 | 2026-10-31 | **Scan par viseur** (révise D33) : « Scanner » ouvre la **caméra en direct** (`getUserMedia`, HTTPS) avec un **cadre de visée** ; seul le contenu du cadre (le numéro, en gros plan) est lu. Préparation : binarisation (seuil d'Otsu) ou contraste, agrandi à 1 200 px ; **3 lectures** (binarisé + mode 11, binarisé + mode 6, contrasté + mode 11) et vote majoritaire. Repli : photo en gros plan si la caméra est indisponible | Retour d'usage : le scan de la carte entière ne marchait pas. Mesuré sur 5 gros plans : **5/5** en < 1 s ; le mode « une ligne » faisait 0/5 et la lecture inversée doublait les erreurs |
 
 ---
 
@@ -96,7 +98,7 @@ _Aucune pour l'instant — toutes les questions de la V1 sont tranchées._
 |---|---|
 | `/` | Accueil du compte : **valeur de la famille** + profils (valeur de chacun), création d'un profil (D31) |
 | `/profils/[id]` | Un profil : sa valeur, ses **extensions** (complétion, valeur) ; renommer, supprimer |
-| `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **sa page de lot** (popin de choix si plusieurs versions, D36), manquante → repère non cliquable |
+| `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **sa page de lot** (popin de choix si plusieurs versions, D36), manquante → **fiche d'ajout** pour ce profil (D37) |
 | `/recherche` | Recherche par nom / numéro (`?profil=` conservé depuis un profil) |
 | `/cartes/[id]` | Fiche carte → « Ajouter à un profil » (profil présélectionné via `?profil=`) |
 | `/lots/[id]` | Détail d'un lot : prix payé / cote figée / cote actuelle ; modifier, supprimer |

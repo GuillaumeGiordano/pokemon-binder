@@ -78,10 +78,10 @@
 		<EmptyState title="Aucune carte" description="Aucune carte de cette extension ne correspond au filtre." />
 	{/if}
 {:else}
-	<SetCardGrid cards={officialCards} officialCount={set.officialCount} onChooseLot={openLots} />
+	<SetCardGrid cards={officialCards} officialCount={set.officialCount} profileId={set.profile.id} setId={set.id} onChooseLot={openLots} />
 	{#if secretCards.length > 0}
 		<h2 class="mt-6 mb-2 font-semibold">Cartes secrètes et spéciales</h2>
-		<SetCardGrid cards={secretCards} officialCount={set.officialCount} onChooseLot={openLots} />
+		<SetCardGrid cards={secretCards} officialCount={set.officialCount} profileId={set.profile.id} setId={set.id} onChooseLot={openLots} />
 	{/if}
 {/if}
 

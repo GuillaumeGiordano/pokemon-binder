@@ -3,10 +3,12 @@ import { TcgdexError } from '$lib/server/tcgdex';
 import { getCardDetail } from '$lib/server/services/cardService';
 import { addToProfile, CollectionError, listProfiles } from '$lib/server/services/profileService';
 import { field } from '$lib/utils/form';
-import { searchHref } from '$lib/utils/searchUrl';
+import { profileSetHref, searchHref } from '$lib/utils/searchUrl';
 import type { Actions, PageServerLoad } from './$types';
 
-// The card page is the « add » step of a search (D36): `?q=…&page=…` leads back to the results,
+// The card page is the « add » step (D36), opened from:
+//   the search results — `?q=…&page=…` leads back to them;
+//   a missing card of a profile's set view — `?profil=<id>&extension=<setId>` leads back there (D37).
 // `?profil=<id>` preselects that profile in the add form.
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	try {
@@ -16,13 +18,21 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 		const q = url.searchParams.get('q');
 		const searchBack = searchHref({ q, page: Number(url.searchParams.get('page')) || 1, profileId: requested?.id });
 
+		// Only the card's own set, in one of the account's profiles: never an arbitrary URL.
+		const fromSet = requested && url.searchParams.get('extension') === card.set.id;
+		const back = fromSet
+			? { href: profileSetHref(requested.id, card.set.id), label: `${requested.name} · ${card.set.name}` }
+			: q
+				? { href: searchBack, label: `Résultats « ${q} »` }
+				: null;
+
 		return {
 			card,
 			profiles: profiles.map(({ id, name }) => ({ id, name })),
 			selectedProfileId: requested?.id ?? profiles[0]?.id ?? null,
-			back: q ? { href: searchBack, label: `Résultats « ${q} »` } : null,
-			/** After an add: back to the results, or a new search for the same profile. */
-			nextCardHref: searchBack
+			back,
+			/** After an add: back where the user came from, or a new search for the same profile. */
+			nextCardHref: back?.href ?? searchBack
 		};
 	} catch (err) {
 		if (err instanceof TcgdexError) error(503, 'TCGdex indisponible : réessaie dans quelques minutes.');

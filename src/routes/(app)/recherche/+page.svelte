@@ -40,7 +40,7 @@
 			value={search.query}
 			icon={Search}
 			placeholder="Pikachu, 025, 025/198…"
-			hint="Par nom ou par numéro (en bas de la carte). Pour scanner : photographie toute la carte, droite, sans reflet."
+			hint="Par nom ou par numéro (en bas de la carte). Ou « Scanner » : vise le numéro dans le cadre."
 		/>
 	</div>
 	<Button type="submit">Rechercher</Button>

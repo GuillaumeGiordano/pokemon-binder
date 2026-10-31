@@ -1,18 +1,23 @@
 <script lang="ts">
 	import { Badge } from '@guillaumeg/ui';
 	import CardImage from '$lib/components/card/CardImage.svelte';
+	import { cardHref } from '$lib/utils/searchUrl';
 	import type { SetCardVM } from '$lib/viewmodels/completion';
 
-	// The cards of a set for a profile (D36): owned ones in colour open their lot page to edit them
-	// (several lots: `onChooseLot` asks which one); missing ones are greyed out and only show what
-	// is left to collect — adding a card goes through the search.
+	// The cards of a set for a profile: owned ones in colour open their lot page to edit them
+	// (several lots: `onChooseLot` asks which one, D36); missing ones, greyed out, open the card's
+	// add page for this profile, with a way back here (D37).
 	let {
 		cards,
 		officialCount,
+		profileId,
+		setId,
 		onChooseLot
 	}: {
 		cards: SetCardVM[];
 		officialCount: number;
+		profileId: string;
+		setId: string;
 		onChooseLot: (card: SetCardVM) => void;
 	} = $props();
 </script>
@@ -58,9 +63,13 @@
 					{@render tile(card)}
 				</button>
 			{:else}
-				<div class="flex flex-col gap-1 p-1" aria-label="{card.name} n° {card.localId}, manquante">
+				<a
+					href={cardHref(card.id, { profileId, setId })}
+					class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80"
+					aria-label="{card.name} n° {card.localId}, manquante : l'ajouter"
+				>
 					{@render tile(card)}
-				</div>
+				</a>
 			{/if}
 		</li>
 	{/each}
