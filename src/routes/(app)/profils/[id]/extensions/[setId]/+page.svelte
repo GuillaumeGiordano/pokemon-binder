@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { Badge, Button, EmptyState, Modal, Progress } from '@guillaumeg/ui';
-	import { ArrowLeft, ChevronRight, Info, PartyPopper } from '@lucide/svelte';
-	import CardImage from '$lib/components/card/CardImage.svelte';
+	import { ArrowLeft, ChevronRight, PartyPopper } from '@lucide/svelte';
 	import SetCardGrid from '$lib/components/set/SetCardGrid.svelte';
-	import { cardHref } from '$lib/utils/searchUrl';
 	import { CARD_VARIANT_LABELS } from '$lib/records/card';
 	import { CARD_LANGUAGE_LABELS } from '$lib/records/collection';
 	import { formatEur } from '$lib/utils/format';
@@ -28,7 +26,8 @@
 	const officialCards = $derived(set.cards.filter((card) => !card.secret && visible(card)));
 	const secretCards = $derived(set.cards.filter((card) => card.secret && visible(card)));
 
-	// D32: an owned card opens the list of its lots.
+	// D36: an owned card opens its lot page directly; with several lots (e.g. Normale + Reverse),
+	// this modal only asks which one (D32).
 	const LOTS_MODAL_ID = 'card-lots';
 	let selected = $state<SetCardVM | null>(null);
 	function openLots(card: SetCardVM) {
@@ -79,35 +78,16 @@
 		<EmptyState title="Aucune carte" description="Aucune carte de cette extension ne correspond au filtre." />
 	{/if}
 {:else}
-	<SetCardGrid cards={officialCards} officialCount={set.officialCount} profileId={set.profile.id} setId={set.id} onOpenLots={openLots} />
+	<SetCardGrid cards={officialCards} officialCount={set.officialCount} onChooseLot={openLots} />
 	{#if secretCards.length > 0}
 		<h2 class="mt-6 mb-2 font-semibold">Cartes secrètes et spéciales</h2>
-		<SetCardGrid cards={secretCards} officialCount={set.officialCount} profileId={set.profile.id} setId={set.id} onOpenLots={openLots} />
+		<SetCardGrid cards={secretCards} officialCount={set.officialCount} onChooseLot={openLots} />
 	{/if}
 {/if}
 
 <Modal id={LOTS_MODAL_ID} title={selected ? `${selected.name} · n° ${selected.localId}` : ''} size="sm">
 	{#if selected}
-		<div class="mb-4 flex items-start gap-3">
-			<div class="w-24 shrink-0">
-				<CardImage
-					imageUrl={selected.imageUrl}
-					name={selected.name}
-					number="{selected.localId}/{set.officialCount}"
-					setName={null}
-					class="rounded-md"
-				/>
-			</div>
-			<div class="flex flex-col gap-2">
-				<p class="text-sm opacity-70">{set.name} · ×{selected.quantity} dans le profil {set.profile.name}</p>
-				<!-- The card page: big picture, market price, variants, and adding more copies. -->
-				<Button href={cardHref(selected.id, { profileId: set.profile.id, setId: set.id })} icon={Info}>
-					Voir la fiche de la carte
-				</Button>
-			</div>
-		</div>
-
-		<h3 class="mb-2 text-sm font-semibold">Mes exemplaires</h3>
+		<p class="mb-3 text-sm opacity-70">Tu as plusieurs versions de cette carte : laquelle ouvrir ?</p>
 		<ul class="flex flex-col gap-2">
 			{#each selected.lots as lot (lot.id)}
 				<li>
@@ -120,7 +100,6 @@
 						</span>
 						<span class="flex shrink-0 items-center gap-1 text-sm">
 							<strong>{formatEur(lot.currentMarketPrice)}</strong>
-							<span class="opacity-70">Modifier</span>
 							<ChevronRight size={16} />
 						</span>
 					</a>

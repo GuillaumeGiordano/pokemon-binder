@@ -63,6 +63,7 @@ Application web permettant de :
 | D33 | 2026-10-30 | **Scan par photo (V2, option A)** : bouton « Scanner » sur la recherche → appareil photo (`<input capture>`) → **OCR Tesseract.js dans le navigateur** du numéro « 025/198 » → recherche par numéro. **5 lectures** de la photo (entière, tiers bas, bande bas-gauche ×1 / ×2, bloc) et **vote majoritaire**. Le numéro reste modifiable ; si aucune extension n'a le total lu, toutes les cartes de ce numéro sont proposées | Gratuit, sans serveur. Mesuré : aucune lecture seule n'est fiable (025/198 lu 025/195), le vote corrige. Limites : photo de la carte entière et droite ; numéros de Galerie (`TG01/TG30`) non gérés ; un total mal lu peut tomber sur une vraie extension (Tempête Argentée, 195) |
 | D34 | 2026-10-30 | **Déploiement sur le VPS** (révise D25) : `https://pokemon.g2webdev.fr`, PM2 `pokemon-binder` port 3040 derrière Nginx, PostgreSQL du VPS, connexion via le G2 Hub de production ; procédure dans `DEPLOY.md`, mise à jour par `git pull && ./scripts/deploy.sh` | Tester en conditions réelles, notamment le scan sur téléphone (HTTPS) |
 | D35 | 2026-10-31 | **Toutes les variantes** (Normale, Reverse, Holo, 1ʳᵉ édition) sont proposées à l'ajout ; celles déclarées par TCGdex en premier, les autres marquées « (non répertoriée) ». Le serveur n'en refuse plus aucune | Les `variants` de TCGdex sont incomplètes : une variante réelle (la carte en main) était impossible à saisir |
+| D36 | 2026-10-31 | **Deux parcours distincts** : la **recherche** est le seul chemin d'**ajout** (résultat → fiche carte + formulaire d'ajout). La **collection** (vue extension d'un profil) sert à **consulter et modifier** : une carte possédée (en couleur) ouvre **directement sa page de lot** (une popin demande laquelle s'il y a plusieurs versions) ; une carte manquante (noir et blanc) n'est qu'un repère, non cliquable. **Précise D32** | Retour d'usage : la popin « lots » puis la fiche avec formulaire d'ajout brouillaient la modification d'une carte possédée |
 
 ---
 
@@ -95,7 +96,7 @@ _Aucune pour l'instant — toutes les questions de la V1 sont tranchées._
 |---|---|
 | `/` | Accueil du compte : **valeur de la famille** + profils (valeur de chacun), création d'un profil (D31) |
 | `/profils/[id]` | Un profil : sa valeur, ses **extensions** (complétion, valeur) ; renommer, supprimer |
-| `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **popin de ses lots** (D32), manquante → fiche carte |
+| `/profils/[id]/extensions/[setId]` | Toutes les cartes d'une extension pour ce profil, possédées / manquantes, avec filtre (D29) ; carte possédée → **sa page de lot** (popin de choix si plusieurs versions, D36), manquante → repère non cliquable |
 | `/recherche` | Recherche par nom / numéro (`?profil=` conservé depuis un profil) |
 | `/cartes/[id]` | Fiche carte → « Ajouter à un profil » (profil présélectionné via `?profil=`) |
 | `/lots/[id]` | Détail d'un lot : prix payé / cote figée / cote actuelle ; modifier, supprimer |
