@@ -30,9 +30,9 @@
 	<title>{card.name} · Pokémon Binder</title>
 </svelte:head>
 
-{#if data.search.query}
+{#if data.back}
 	<div class="mb-4">
-		<Button href={data.search.href} variant="ghost" icon={ArrowLeft}>Résultats « {data.search.query} »</Button>
+		<Button href={data.back.href} variant="ghost" icon={ArrowLeft}>{data.back.label}</Button>
 	</div>
 {/if}
 
@@ -124,7 +124,7 @@
 				{:else if form?.itemId}
 					<!-- After an add, the next card is the usual next step: back to the results. -->
 					<div class="flex flex-wrap items-center gap-3">
-						<Button href={data.search.href} icon={Search}>Ajouter une autre carte</Button>
+						<Button href={data.nextCardHref} icon={Search}>Ajouter une autre carte</Button>
 						<a href="/lots/{form.itemId}" class="text-sm underline">Voir le lot</a>
 					</div>
 				{/if}

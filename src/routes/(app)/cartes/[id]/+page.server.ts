@@ -3,27 +3,36 @@ import { TcgdexError } from '$lib/server/tcgdex';
 import { getCardDetail } from '$lib/server/services/cardService';
 import { addToProfile, CollectionError, listProfiles } from '$lib/server/services/profileService';
 import { field } from '$lib/utils/form';
-import { searchHref } from '$lib/utils/searchUrl';
+import { profileSetHref, searchHref } from '$lib/utils/searchUrl';
 import type { Actions, PageServerLoad } from './$types';
 
-// `?profil=<id>`: coming from a profile, the add form preselects it.
-// `?q=…&page=…`: opened from the search results, the page leads back to them.
+// Where the card page was opened from, for its back link and the « next card » button:
+//   `?profil=<id>&extension=<setId>`: a profile's view of the card's set;
+//   `?q=…&page=…`: the search results.
+// `?profil=<id>` alone preselects that profile in the add form.
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	try {
 		const [card, profiles] = await Promise.all([getCardDetail(params.id), listProfiles(locals.user!.sub)]);
 		if (!card) error(404, 'Carte introuvable.');
-		const requested = url.searchParams.get('profil');
-		const selectedProfileId = profiles.find((profile) => profile.id === requested)?.id ?? profiles[0]?.id ?? null;
+		const requested = profiles.find((profile) => profile.id === url.searchParams.get('profil')) ?? null;
 		const q = url.searchParams.get('q');
+		const searchBack = searchHref({ q, page: Number(url.searchParams.get('page')) || 1, profileId: requested?.id });
+
+		// Only the card's own set, in one of the account's profiles: never an arbitrary URL.
+		const fromSet = requested && url.searchParams.get('extension') === card.set.id;
+		const back = fromSet
+			? { href: profileSetHref(requested.id, card.set.id), label: `${requested.name} · ${card.set.name}` }
+			: q
+				? { href: searchBack, label: `Résultats « ${q} »` }
+				: null;
+
 		return {
 			card,
 			profiles: profiles.map(({ id, name }) => ({ id, name })),
-			selectedProfileId,
-			search: {
-				query: q,
-				/** Back to the results; without a search, a new search for the same profile. */
-				href: searchHref({ q, page: Number(url.searchParams.get('page')) || 1, profileId: requested })
-			}
+			selectedProfileId: requested?.id ?? profiles[0]?.id ?? null,
+			back,
+			/** After an add: back where the user came from, or a new search for the same profile. */
+			nextCardHref: back?.href ?? searchBack
 		};
 	} catch (err) {
 		if (err instanceof TcgdexError) error(503, 'TCGdex indisponible : réessaie dans quelques minutes.');

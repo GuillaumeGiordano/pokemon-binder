@@ -7,6 +7,7 @@
 	import { CARD_CONDITION_LABELS, CARD_LANGUAGE_LABELS } from '$lib/records/collection';
 	import { formatDay, formatEur, formatSignedEur, formatSignedPercent } from '$lib/utils/format';
 	import { priceChange } from '$lib/utils/price';
+	import { cardHref } from '$lib/utils/searchUrl';
 
 	let { data, form } = $props();
 
@@ -34,7 +35,11 @@
 </Button>
 
 <div class="mt-4 flex flex-col gap-6 md:flex-row">
-	<a href="/cartes/{lot.card.id}" class="mx-auto w-full max-w-xs md:mx-0">
+	<a
+		href={cardHref(lot.card.id, { profileId: lot.profile.id, setId: lot.card.setId })}
+		class="mx-auto w-full max-w-xs md:mx-0"
+		aria-label="Voir la fiche de {lot.card.name}"
+	>
 		<CardImage
 			imageUrl={lot.card.imageUrl}
 			name={lot.card.name}

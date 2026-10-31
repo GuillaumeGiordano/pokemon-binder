@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { Badge } from '@guillaumeg/ui';
 	import CardImage from '$lib/components/card/CardImage.svelte';
+	import { cardHref } from '$lib/utils/searchUrl';
 	import type { SetCardVM } from '$lib/viewmodels/completion';
 
 	// The cards of a set for a profile: owned ones in colour (a click lists their lots, D32),
-	// missing ones greyed out (a click opens the card page to add it to the profile).
+	// missing ones greyed out (a click opens the card page to add it, with a way back here).
 	let {
 		cards,
 		officialCount,
 		profileId,
+		setId,
 		onOpenLots
 	}: {
 		cards: SetCardVM[];
 		officialCount: number;
 		profileId: string;
+		setId: string;
 		onOpenLots: (card: SetCardVM) => void;
 	} = $props();
 </script>
@@ -52,7 +55,7 @@
 				</button>
 			{:else}
 				<a
-					href="/cartes/{card.id}?profil={profileId}"
+					href={cardHref(card.id, { profileId, setId })}
 					class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80"
 					aria-label="{card.name} n° {card.localId}, manquante : l'ajouter"
 				>
