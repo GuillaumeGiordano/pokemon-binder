@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Alert, Badge, Button, Input, NumberInput, Select, toast } from '@guillaumeg/ui';
-	import { Plus } from '@lucide/svelte';
+	import { ArrowLeft, Plus, Search } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import { CARD_VARIANTS, CARD_VARIANT_LABELS } from '$lib/records/card';
 	import {
@@ -29,6 +29,12 @@
 <svelte:head>
 	<title>{card.name} · Pokémon Binder</title>
 </svelte:head>
+
+{#if data.search.query}
+	<div class="mb-4">
+		<Button href={data.search.href} variant="ghost" icon={ArrowLeft}>Résultats « {data.search.query} »</Button>
+	</div>
+{/if}
 
 <div class="flex flex-col gap-6 md:flex-row">
 	<div class="mx-auto w-full max-w-xs md:mx-0">
@@ -116,7 +122,11 @@
 				{#if form?.message}
 					<Alert variant="error" dismissible={false}>{form.message}</Alert>
 				{:else if form?.itemId}
-					<a href="/lots/{form.itemId}" class="text-sm underline">Voir le lot</a>
+					<!-- After an add, the next card is the usual next step: back to the results. -->
+					<div class="flex flex-wrap items-center gap-3">
+						<Button href={data.search.href} icon={Search}>Ajouter une autre carte</Button>
+						<a href="/lots/{form.itemId}" class="text-sm underline">Voir le lot</a>
+					</div>
 				{/if}
 			{/if}
 		</section>

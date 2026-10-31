@@ -4,21 +4,20 @@
 	import { ChevronLeft, ChevronRight, Search, SearchX } from '@lucide/svelte';
 	import CardImage from '$lib/components/card/CardImage.svelte';
 	import ScanButton from '$lib/components/scan/ScanButton.svelte';
+	import { cardHref, searchHref } from '$lib/utils/searchUrl';
 
 	let { data } = $props();
 
 	/** The number read on the photo becomes the search; the field stays editable to fix a misread. */
 	async function searchScanned(cardNumber: string) {
-		await goto(`?q=${encodeURIComponent(cardNumber)}${profileParam ? `&${profileParam}` : ''}`);
+		await goto(searchHref({ q: cardNumber, profileId: data.profileId }));
 		toast.info(`Numéro lu : ${cardNumber}. Corrige-le dans le champ s'il est faux.`);
 	}
 
 	const search = $derived(data.search);
-	/** The profile the search was started from, kept in every link. */
-	const profileParam = $derived(data.profileId ? `profil=${encodeURIComponent(data.profileId)}` : '');
-	const pageHref = (page: number) =>
-		`?q=${encodeURIComponent(search.query)}&page=${page}${profileParam ? `&${profileParam}` : ''}`;
-	const cardHref = (id: string) => `/cartes/${id}${profileParam ? `?${profileParam}` : ''}`;
+	// The query, page and profile travel in every link: a card page can lead back to these results.
+	const pageHref = (page: number) => searchHref({ q: search.query, page, profileId: data.profileId });
+	const resultHref = (id: string) => cardHref(id, { q: search.query, page: search.page, profileId: data.profileId });
 </script>
 
 <svelte:head>
@@ -64,7 +63,7 @@
 	<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 		{#each search.results as card (card.id)}
 			<li>
-				<a href={cardHref(card.id)} class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
+				<a href={resultHref(card.id)} class="flex flex-col gap-1 rounded-lg p-1 hover:opacity-80">
 					<CardImage
 						imageUrl={card.imageUrl}
 						name={card.name}
